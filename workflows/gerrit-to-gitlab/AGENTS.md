@@ -95,9 +95,12 @@ The final commit message structure after cherry-pick and augmentation:
 (cherry picked from commit <upstream-commit-hash>)
 Upstream-<Release>: <gerrit-change-url>
 Resolves: <Jira-issue-key>
+Conflicts:
+ * <file_path>
+   <resolution description, optionally referencing a Change-Id>
 ```
 
-**Example**:
+**Example** (clean cherry-pick):
 
 ```text
 Fix scheduler race condition in live migration
@@ -114,10 +117,33 @@ Upstream-Wallaby: https://review.opendev.org/c/openstack/nova/+/912345
 Resolves: PROJ-456
 ```
 
+**Example** (cherry-pick with conflicts):
+
+```text
+Fix scheduler race condition in live migration
+
+The scheduler could double-book a host when two live migrations
+targeted the same destination simultaneously. Add a lock to
+serialize placement claim updates.
+
+Change-Id: I1234567890abcdef
+Closes-Bug: #2012345
+
+(cherry picked from commit a1b2c3d4e5f6)
+Upstream-Wallaby: https://review.opendev.org/c/openstack/nova/+/912345
+Resolves: PROJ-456
+Conflicts:
+ * nova/tests/unit/virt/disk/test_api.py
+   Ie09e40d6476dcabda2d599e96701d419e3e8bdf0 convert of ext to privsep
+ * nova/virt/disk/api.py
+   I359a412fcabe9e59c99167b35bb3be6553e5f41b drop of utils.execute()
+```
+
 **Rules**:
 
 - `Upstream-<Release>:` is always required. The release name (e.g., Wallaby, Zed, 2024.2) is provided by the user.
 - `Resolves:` is optional. Only included when the user specifies a Jira issue key.
+- `Conflicts:` is optional. Only included when the cherry-pick had merge conflicts. Each entry lists the file path and a short description of the resolution, optionally referencing the Change-Id of the change that caused the conflict.
 
 ## Artifact Output
 

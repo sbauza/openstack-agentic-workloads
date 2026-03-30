@@ -306,6 +306,17 @@ If `git cherry-pick -x` exits with a conflict error:
 
    - If markers remain, inform the user which files still have unresolved conflicts
 
+   - **Collect conflict resolution notes** for the commit message. For each conflicting file, ask the user:
+
+     "How was the conflict in `{file_path}` resolved? Provide a short description, optionally referencing a Change-Id if the conflict was caused by a missing prerequisite change."
+
+     Example user responses:
+     - `Ie09e40d6476dcabda2d599e96701d419e3e8bdf0 convert of ext to privsep`
+     - `context drift from recent refactor`
+     - `I359a412fcabe9e59c99167b35bb3be6553e5f41b drop of utils.execute()`
+
+     Store the list of `(file_path, resolution_description)` pairs for use in step 9.
+
    - Stage the resolved files:
 
      ```bash
@@ -341,10 +352,29 @@ Append the following lines after the `(cherry picked from commit ...)` line:
 ```text
 Upstream-<Release>: <gerrit-change-url>
 Resolves: <Jira-issue-key>
+Conflicts:
+ * <file_path_1>
+   <resolution_description_1>
+ * <file_path_2>
+   <resolution_description_2>
 ```
 
 - `Upstream-<Release>:` is always added (e.g., `Upstream-Wallaby: https://review.opendev.org/c/openstack/nova/+/912345`)
 - `Resolves:` is only added if the user provided a Jira issue key
+- `Conflicts:` is only added if the cherry-pick had merge conflicts (resolved in step 8). Each entry lists the conflicting file path and the user's description of how it was resolved. The description may reference a Change-Id if the conflict was caused by a missing prerequisite change.
+
+**Example** (with conflicts):
+
+```text
+(cherry picked from commit a1b2c3d4e5f6)
+Upstream-Wallaby: https://review.opendev.org/c/openstack/nova/+/912345
+Resolves: PROJ-456
+Conflicts:
+ * nova/tests/unit/virt/disk/test_api.py
+   Ie09e40d6476dcabda2d599e96701d419e3e8bdf0 convert of ext to privsep
+ * nova/virt/disk/api.py
+   I359a412fcabe9e59c99167b35bb3be6553e5f41b drop of utils.execute()
+```
 
 ### 10. Present MR Summary
 
