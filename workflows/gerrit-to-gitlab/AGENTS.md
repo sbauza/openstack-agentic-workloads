@@ -23,7 +23,8 @@ This workflow enables OpenStack operators to backport merged upstream Gerrit cha
 1. User runs `/backport` with the first Gerrit change — creates a new backport branch
 2. User runs `/backport` again with additional changes — detects the existing branch and adds commits to it
 3. Repeat step 2 as needed
-4. User runs `/create-mr` — creates a single MR containing all accumulated commits
+4. User runs `/test` to validate the accumulated changes (optional, repeatable)
+5. User runs `/create-mr` — creates a single MR containing all accumulated commits
 
 ## MCP Server Dependencies
 
@@ -155,6 +156,7 @@ All artifacts are written to `artifacts/gerrit-to-gitlab/`:
 | Conflict report | `conflict-{change_id}.md` | When cherry-pick has conflicts |
 | Dependency analysis | `deps-{change_id}.md` | When missing dependencies are detected |
 | MR draft (fallback) | `mr-draft-{change_id}.md` | When `/create-mr` fails |
+| Test results | `test-{branch_id}-{tox_env}.md` | After every `/test` run |
 
 ## Workspace Navigation
 
@@ -177,6 +179,42 @@ Tool selection rules:
 - Use Read for: Known paths, standard files, files you just created
 - Use Glob for: Discovery (finding multiple files by pattern)
 - Use Grep for: Content search (finding specific patterns in code)
+
+## Docker / Tox Testing
+
+The `/test` skill uses [openstack-tox-docker](https://github.com/gibizer/openstack-tox-docker) to run tox environments in Docker containers.
+
+### Docker Run Command
+
+All branches use a unified pattern:
+
+```bash
+cd <repo_path> && docker container run \
+    --rm \
+    --userns=keep-id \
+    -w /build \
+    -v "$(pwd):/build:Z" \
+    --user "$(id -u):$(id -g)" \
+    nova-tox-<branch> \
+    tox -e <tox_env>
+```
+
+Key flags:
+- `--userns=keep-id`: Preserve user ID mapping (prevents permission issues)
+- `:Z`: SELinux relabeling on volume mount
+- `--user`: Run as current user to preserve file ownership
+
+### Image Build
+
+Images are built from the openstack-tox-docker repo (cloned to `/workspace/repos/openstack-tox-docker`):
+
+```bash
+cd /workspace/repos/openstack-tox-docker && ./build-<branch>.sh
+```
+
+Image naming: `nova-tox-<branch>` (e.g., `nova-tox-wallaby`, `nova-tox-yoga`).
+
+Images are reused across `/test` invocations — only built once per session.
 
 ## OpenStack Context
 
