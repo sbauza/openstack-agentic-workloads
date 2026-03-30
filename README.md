@@ -16,19 +16,13 @@ The platform automatically discovers workflows from this repository. Any directo
 
 ## Using Workflows
 
-### In the ACP UI
+This repository is designed to be consumed via the **Custom Workflow** feature in ACP:
 
-1. Navigate to your session
-2. Open the **Workflows** panel
-3. Select a workflow from the list
-4. The workflow loads and displays its startup prompt
-
-### Custom Workflows
-
-To test a workflow from a branch or external repository:
-
-1. Select **"Custom Workflow..."** in the UI
-2. Enter the Git URL, branch, and path to the workflow directory
+1. In your ACP session, select **"Custom Workflow..."**
+2. Fill in the fields:
+   - **URL**: `https://github.com/sbauza/openstack-agentic-workloads.git`
+   - **Branch**: `main` (or a feature branch for testing)
+   - **Path**: path to the workflow directory (e.g., `workflows/nova-review`)
 3. Click **"Load Workflow"**
 
 ## Repository Structure
