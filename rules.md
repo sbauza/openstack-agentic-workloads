@@ -1,5 +1,17 @@
 # Rules
 
+These rules apply to **all workflows** in this repository.
+
+## Human Always Decides
+
+The agent provides analysis, suggestions, and draft outputs. The **human makes all final decisions**. This includes:
+
+- **Gerrit votes**: Never suggest or auto-select a Code-Review score. Ask the user what vote they want to apply.
+- **Posting comments**: Never post to Gerrit, Launchpad, or any external service without explicit user approval.
+- **Merge/abandon actions**: Never take actions that change the state of a change, bug, or spec without the user confirming.
+
+When presenting options, lay out the choices clearly and let the user decide. Do not assume what they would choose.
+
 ## Self-Review Before Presenting
 
 Before presenting any output to the user:
@@ -23,5 +35,5 @@ All review comments — whether in artifacts, Gerrit, or conversation — must b
 - Each comment should be self-contained: a reader should understand the issue without cross-referencing other comments
 - Lead with **what's wrong and why it matters**, then suggest a fix
 - Keep inline comments short — one issue, one actionable sentence or two
-- Avoid dumping raw rule references alone (e.g., don't just say "N310 violation"); explain what the rule means in context (e.g., "Use `timeutils.utcnow()` here — `datetime.utcnow()` breaks Nova's time mocking in tests (N310)")
+- Avoid dumping raw rule references alone; explain what the rule means in context
 - Use a conversational, respectful tone — write as a helpful colleague, not an automated linter
