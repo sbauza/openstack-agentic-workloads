@@ -24,7 +24,19 @@ Examples:
 3. If bug ID provided: fetch bug details (same as `/triage` Step 3) and load any existing triage classification
 4. If no prior triage and no bug ID: error with "No bug context available. Run `/triage {bug_id}` first, or provide a bug ID: `/reproduce {bug_id}`"
 
-### Step 2. Identify Code Paths
+### Step 2. Ensure Nova Source Checkout
+
+Check that the Nova source checkout exists at `/workspace/repos/nova/`.
+
+If missing, **automatically clone it**:
+
+```bash
+git clone https://opendev.org/openstack/nova.git /workspace/repos/nova
+```
+
+Inform the user that cloning is in progress — this may take a few minutes.
+
+### Step 3. Identify Code Paths
 
 Using the bug description, tracebacks, error messages, and triage classification, identify relevant source files in the Nova checkout at `/workspace/repos/nova/`:
 
@@ -35,7 +47,7 @@ Using the bug description, tracebacks, error messages, and triage classification
 
 Use Grep to search the Nova codebase. Report all relevant file paths found.
 
-### Step 3. Check Existing Tests
+### Step 4. Check Existing Tests
 
 Search for tests covering the affected code area:
 
@@ -46,7 +58,7 @@ Search for tests covering the affected code area:
    - Whether the reported scenario has test coverage
    - Any gaps in coverage for the reported issue
 
-### Step 4. Check Recent Changes
+### Step 5. Check Recent Changes
 
 Run `git log` in the Nova checkout to find recent activity in the affected area:
 
@@ -55,7 +67,7 @@ Run `git log` in the Nova checkout to find recent activity in the affected area:
 3. `git log --oneline --all --grep="{keywords}"` — commits with related keywords
 4. For each relevant commit found, note the hash, subject line, and date
 
-### Step 5. Assess Reproducibility
+### Step 6. Assess Reproducibility
 
 Based on the analysis, produce one of these assessments:
 
@@ -80,7 +92,7 @@ Based on the analysis, produce one of these assessments:
   - Race conditions or timing-sensitive code
   - Requires a running OpenStack deployment to verify
 
-### Step 6. Present Assessment
+### Step 7. Present Assessment
 
 **Reproducibility Assessment**: {Yes / No / Inconclusive / Requires Environment}
 

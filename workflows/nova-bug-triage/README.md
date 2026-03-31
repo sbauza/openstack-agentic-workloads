@@ -15,8 +15,8 @@ This workflow helps Nova bug triagers quickly classify bug reports against the N
 
 ## Prerequisites
 
-- **Nova source checkout** (required): The Nova repository must be available at `/workspace/repos/nova/`. Add it to your ACP session or clone it manually.
-- **Launchpad MCP** (optional): If available, enables direct API integration. Falls back to REST API automatically.
+- **Nova source checkout** (auto-managed): The workflow automatically clones the Nova repository to `/workspace/repos/nova/` from `https://opendev.org/openstack/nova.git` if not already present. No manual setup needed.
+- **Launchpad OAuth credentials** (optional, for write operations): Set `LP_ACCESS_TOKEN` and `LP_ACCESS_SECRET` environment variables to enable posting comments and updating bug status via `/update-launchpad`. Without these, the workflow operates in read-only mode and generates fallback artifacts for manual posting. See **Generating Launchpad OAuth Tokens** below.
 
 ## Setup
 
@@ -27,13 +27,39 @@ Load this workflow in ACP as a Custom Workflow:
 3. Set the branch (e.g., `main`)
 4. Set the path: `workflows/nova-bug-triage`
 
+## Generating Launchpad OAuth Tokens
+
+To enable `/update-launchpad` (posting comments and changing bug status), you need OAuth 1.0a tokens. Run the included helper script:
+
+```bash
+python3 workflows/shared/scripts/launchpad-auth.py
+```
+
+The script will:
+
+1. Request a temporary token from Launchpad
+2. Print a URL for you to open in your browser
+3. On the Launchpad page, log in and select "Change Anything" access level, then click "Authorize"
+4. Press Enter in the terminal to complete the exchange
+5. Print the `export` commands to set in your environment
+
+Then configure the env vars in your ACP session or shell profile:
+
+```bash
+export LP_CONSUMER_KEY='acp-nova-triage'
+export LP_ACCESS_TOKEN='<your-token>'
+export LP_ACCESS_SECRET='<your-secret>'
+```
+
+These tokens are permanent and do not expire unless you revoke them at `https://launchpad.net/~/+oauth-tokens`.
+
 ## What It Does
 
 ### /triage
 
 1. Parses bug ID from user input (bare ID or Launchpad URL)
-2. Verifies Nova source checkout is available
-3. Fetches bug details from Launchpad (MCP or REST API)
+2. Ensures Nova source checkout is available (auto-clones if missing)
+3. Fetches bug details from Launchpad via REST API
 4. Displays structured bug summary (title, reporter, status, importance, tags, description, comments)
 5. Analyzes validity against Nova source code
 6. Searches for potential duplicate bugs
@@ -59,7 +85,7 @@ Load this workflow in ACP as a Custom Workflow:
 1. Maps validity category to Launchpad status/importance changes
 2. Drafts a constructive comment for the bug reporter
 3. Previews the complete update for user approval
-4. Posts to Launchpad (MCP or OAuth REST API)
+4. Posts to Launchpad via OAuth REST API (or generates manual fallback artifact)
 5. Falls back to a manual artifact if posting fails
 
 ## Validity Categories
@@ -75,8 +101,8 @@ Load this workflow in ACP as a Custom Workflow:
 
 ## Fallback Mechanisms
 
-- **Launchpad MCP unavailable**: Automatically falls back to REST API via `launchpad-fetch-bug.sh` for reads. OAuth authentication prompted for writes.
-- **Posting fails**: Generates a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md` with the comment and status changes ready for manual posting via the Launchpad web UI.
+- **Launchpad credentials not configured**: Read operations (fetching bugs, searching duplicates) work without authentication. For write operations, the workflow generates a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md` with the comment and status changes ready for manual posting via the Launchpad web UI.
+- **Nova repo not present**: Automatically cloned from upstream on first use. If cloning fails (e.g., network issues), triage is blocked until the repo is available.
 
 ## Artifact Outputs
 
