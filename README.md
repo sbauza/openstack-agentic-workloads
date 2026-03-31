@@ -37,9 +37,30 @@ The `knowledge/` directory contains shared project reference files that multiple
 
 Workflows that need Nova domain knowledge (e.g., `nova-review`, `nova-bug-triage`) reference `knowledge/nova.md` via `@../../knowledge/nova.md` in their `AGENTS.md` and add only workflow-specific content locally. New Nova-related workflows should follow the same pattern rather than duplicating the shared reference.
 
+## Agent Personas
+
+The `agents/` directory contains reusable agent persona definitions that workflows can invoke as specialized subagents. Each persona encodes OpenStack domain expertise — versioning rules, triage patterns, security threat models — rather than generic software roles.
+
+| Persona | File | Used By |
+|---------|------|---------|
+| Nova Core Reviewer | [`nova-core.md`](agents/nova-core.md) | nova-review |
+| Nova Core Security | [`nova-coresec.md`](agents/nova-coresec.md) | nova-review, nova-bug-triage |
+| OpenStack Bug Triager | [`bug-triager.md`](agents/bug-triager.md) | nova-bug-triage |
+| Backport Specialist | [`backport-specialist.md`](agents/backport-specialist.md) | gerrit-to-gitlab |
+| OpenStack Operator | [`openstack-operator.md`](agents/openstack-operator.md) | nova-bug-triage |
+
+See [`agents/README.md`](agents/README.md) for details on how personas work, when to use them, and how to create new ones.
+
 ## Repository Structure
 
 ```text
+agents/
+├── nova-core.md           # Nova core reviewer persona
+├── nova-coresec.md        # Nova security reviewer persona
+├── bug-triager.md         # Bug triage specialist persona
+├── backport-specialist.md # Backport specialist persona
+├── openstack-operator.md  # Operator perspective persona
+└── README.md              # Persona documentation
 knowledge/
 └── nova.md                # Shared Nova project reference (used by Nova workflows)
 workflows/
