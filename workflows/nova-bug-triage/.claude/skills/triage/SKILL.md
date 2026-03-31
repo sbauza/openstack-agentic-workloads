@@ -24,20 +24,21 @@ Extract the numeric bug ID from the user's input:
 - If a Launchpad URL (e.g., `https://bugs.launchpad.net/nova/+bug/2112373`), extract the numeric ID
 - If the format is unrecognized, report an error with the expected formats
 
-### Step 2. Verify Nova Source Checkout
+### Step 2. Ensure Nova Source Checkout
 
 Check that the Nova source checkout exists at `/workspace/repos/nova/`.
 
-If missing, **stop** and report:
+If missing, **automatically clone it**:
 
-> Nova source checkout required for triage. Add the nova repository to your ACP session or clone it:
-> `git clone https://opendev.org/openstack/nova.git /workspace/repos/nova`
+```bash
+git clone https://opendev.org/openstack/nova.git /workspace/repos/nova
+```
+
+Inform the user that cloning is in progress — this may take a few minutes.
 
 ### Step 3. Fetch Bug from Launchpad
 
-1. Check Launchpad MCP availability: run `workflows/shared/scripts/detect-mcp.sh launchpad`
-2. If MCP available: use Launchpad MCP tools to fetch bug details
-3. If MCP unavailable: run `workflows/shared/scripts/launchpad-fetch-bug.sh {bug_id}` and parse the JSON output
+Run `workflows/shared/scripts/launchpad-fetch-bug.sh {bug_id}` and parse the JSON output.
 
 Handle errors:
 - **Bug not found** (exit code 1): report "Bug {id} not found on Launchpad"
@@ -109,9 +110,7 @@ For each validity category, check the relevant indicators using the Nova source 
 ### Step 5b. Check for Duplicates
 
 1. Extract key terms from the bug title and description (3-5 distinctive keywords)
-2. Search Launchpad for Nova bugs with similar characteristics:
-   - If Launchpad MCP available: use MCP search
-   - If MCP unavailable: use `curl` against `https://api.launchpad.net/1.0/nova?ws.op=searchTasks&search_text={keywords}&status=New&status=Confirmed&status=Triaged&status=In+Progress&omit_duplicates=true`
+2. Search Launchpad for Nova bugs with similar characteristics using `curl` against `https://api.launchpad.net/1.0/nova?ws.op=searchTasks&search_text={keywords}&status=New&status=Confirmed&status=Triaged&status=In+Progress&omit_duplicates=true`
 3. For each candidate (max 5), assess similarity:
    - Title similarity
    - Matching tags

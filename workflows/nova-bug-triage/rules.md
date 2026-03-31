@@ -15,32 +15,27 @@ Bug triage involves actions that change the state of Launchpad bugs. These actio
 
 When presenting triage results, lay out the proposed classification and Launchpad changes clearly, then ask the user to confirm, modify, or reject.
 
-## Launchpad MCP Availability
+## Launchpad REST API Integration
 
-The Nova Bug Triage workflow supports both **Launchpad MCP** and **REST API fallback** modes:
-
-- **With Launchpad MCP**: Full integration — fetch bug details, search for duplicates, post comments, update status
-- **Without Launchpad MCP**: REST API fallback — use `launchpad-fetch-bug.sh` for reads, `curl` with OAuth for writes
-
-**At workflow startup**, MCP availability is detected via `workflows/shared/scripts/detect-mcp.sh launchpad`. The agent reports the status and adapts accordingly.
-
-### When Launchpad MCP is Unavailable
+The Nova Bug Triage workflow interacts with Launchpad exclusively via its REST API:
 
 1. **Bug Fetching** (`/triage` skill):
-   - Use `workflows/shared/scripts/launchpad-fetch-bug.sh` to fetch bug details via REST API
+   - Uses `workflows/shared/scripts/launchpad-fetch-bug.sh` to fetch bug details
    - No authentication needed for public bugs
    - Private bugs will return HTTP 401 — inform the user
 
 2. **Duplicate Search** (`/triage` skill):
-   - Use `curl` against the Launchpad REST API search endpoint
+   - Uses `curl` against the Launchpad REST API search endpoint
    - No authentication needed
 
 3. **Posting Updates** (`/update-launchpad` skill):
-   - Requires OAuth authentication
-   - Prompt user for OAuth credentials (consumer key, token, token secret)
-   - Credentials are never stored — prompted fresh each time, cleared after use
-   - Maximum 3 authentication retry attempts
-   - On failure, generate a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md`
+   - Uses `workflows/shared/scripts/launchpad-update-bug.py` with OAuth 1.0a
+   - Requires environment variables: `LP_ACCESS_TOKEN`, `LP_ACCESS_SECRET`, and optionally `LP_CONSUMER_KEY`
+   - If credentials are not configured, the skill generates a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md` with copy-paste instructions for manual posting
+
+### Nova Repository Auto-Clone
+
+The Nova source checkout is expected at `/workspace/repos/nova/`. If missing, the workflow automatically clones it from `https://opendev.org/openstack/nova.git`. This may take a few minutes — inform the user that cloning is in progress.
 
 ## Security Handling
 
@@ -52,10 +47,11 @@ The Nova Bug Triage workflow supports both **Launchpad MCP** and **REST API fall
 
 ### Credential Management
 
-- Never store OAuth tokens, passwords, or API keys
-- Prompt for credentials only when needed (posting updates)
-- Clear credentials from memory immediately after use
+- OAuth credentials are read from environment variables (`LP_ACCESS_TOKEN`, `LP_ACCESS_SECRET`, `LP_CONSUMER_KEY`)
+- Never log or echo credential values
+- Never hardcode credentials in scripts or artifacts
 - All API communication uses HTTPS
+- If credentials are not set, degrade gracefully to read-only mode
 
 ## Writing Style
 
@@ -90,12 +86,12 @@ Follow these guidelines when generating triage comments and reports:
 - "Launchpad API unreachable" (network or rate limiting)
 - "Authentication failed" (invalid OAuth credentials)
 - "Insufficient permissions" (need Bug Supervisor role for some status changes)
-- "Nova source checkout not found" (required for triage)
+- "Nova source checkout not found" (auto-clone failed)
 
 **Remediation Steps**: Every error message includes specific next steps:
 - Bug not found → verify the bug ID is correct
 - Private bug → authenticate or ask someone with access
 - API unreachable → check network, try again later
-- Auth failed → verify OAuth credentials
+- Auth failed → verify OAuth credentials (`LP_ACCESS_TOKEN`, `LP_ACCESS_SECRET`)
 - Insufficient permissions → ask a Nova Bug Supervisor to make the change
-- Source checkout missing → add Nova repo to ACP session or clone it
+- Source checkout missing → check network connectivity (auto-clone may have failed)

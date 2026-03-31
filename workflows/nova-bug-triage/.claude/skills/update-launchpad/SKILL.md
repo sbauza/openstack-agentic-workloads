@@ -77,25 +77,21 @@ If the user chooses to modify, incorporate their changes and re-preview.
 
 **Only after explicit user approval:**
 
-1. Check Launchpad MCP availability via `workflows/shared/scripts/detect-mcp.sh launchpad`
-2. If MCP available:
-   - Use MCP tools to post the comment and update status/importance
+1. Check that `LP_ACCESS_TOKEN` and `LP_ACCESS_SECRET` environment variables are set
+2. If credentials are available:
+   - Run `workflows/shared/scripts/launchpad-update-bug.py {bug_id}` with the appropriate `--comment`, `--status`, and/or `--importance` arguments
    - Report success with the updated bug URL
-3. If MCP unavailable:
-   - Inform user that OAuth authentication is needed
-   - Prompt for OAuth credentials (consumer key, token, token secret)
-   - Post comment via Launchpad REST API: `POST /bugs/{bug_id}/+addcomment`
-   - Update status/importance via: `PATCH /nova/+bug/{bug_id}`
-   - Handle errors:
-     - **401 Unauthorized**: "Authentication failed. Check your OAuth credentials." Offer retry (max 3 attempts).
-     - **403 Forbidden**: "Insufficient permissions. You may need Nova Bug Supervisor role for this status change." Suggest an alternative status the user can set.
-     - **404 Not Found**: "Bug not found. It may have been deleted or made private."
-     - **Network error**: "Cannot reach Launchpad. Check your network connection and try again."
-   - Credentials are never stored — cleared immediately after use
+3. If credentials are not set:
+   - Inform user: "Launchpad OAuth credentials are not configured. Set `LP_ACCESS_TOKEN` and `LP_ACCESS_SECRET` environment variables to enable posting."
+   - Proceed to Step 6 (fallback) to generate a manual artifact
+4. Handle errors from the script:
+   - **Exit code 1 (auth error)**: "Authentication failed. Check your OAuth credentials (LP_ACCESS_TOKEN, LP_ACCESS_SECRET)."
+   - **Exit code 3 (API error)**: Report the specific error from the script output. If it mentions 403, suggest the user may need Bug Supervisor role for the proposed status.
+   - On failure, proceed to Step 6 (fallback)
 
 ### Step 6. Fallback
 
-If posting fails after all attempts (3 retries for auth, or user cancels):
+If posting fails or credentials are not configured:
 
 1. Save the drafted update as a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md`
 2. Format the artifact with:
