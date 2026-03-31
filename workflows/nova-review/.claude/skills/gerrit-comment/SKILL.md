@@ -42,6 +42,7 @@ Transform the review into Gerrit-compatible comments:
 - Group comments by file path
 - Each comment must be **self-contained and human-readable** — explain what's wrong and why in plain language
 - Keep inline comments focused — one issue per comment, one or two sentences
+- **Every inline comment must set the `"unresolved"` field.** Default is `true` (unresolved), but the user may request `false` (resolved). The Gerrit API defaults to resolved if this field is omitted, so it must always be explicitly set
 
 ### 3. Present to User for Approval
 
@@ -63,7 +64,9 @@ Show the user exactly what will be posted:
 {list of file:line -> comment}
 ```
 
-Then ask: "Would you like to post these comments to Gerrit? If so, what Code-Review vote do you want to apply (e.g., +1, +2, -1, 0, or no vote)?"
+Then ask: "Would you like to post these comments to Gerrit? If so:
+1. What Code-Review vote do you want to apply (e.g., +1, +2, -1, 0, or no vote)?
+2. Should the inline comments be posted as **unresolved** (default) or **resolved**?"
 
 ### 4. Check MCP Availability and Post Review
 
@@ -76,7 +79,7 @@ Use the Gerrit MCP tools to post:
 1. **Post the review** using `mcp__gerrit__set_review` (or equivalent):
    - `change_id`: The change number or ID
    - `message`: The top-level review message
-   - `comments`: Map of file paths to inline comment objects with `line` and `message`
+   - `comments`: Map of file paths to inline comment objects with `line`, `message`, and `unresolved: true`
    - `labels`: `{"Code-Review": vote}` only if the user explicitly chose a vote
 
 2. **Verify the post** by fetching the change details back and confirming the comment appears
@@ -87,36 +90,39 @@ Use the Gerrit MCP tools to post:
 
 Fall back to Gerrit REST API posting:
 
-1. **Call the gerrit-post-review.sh script** with the formatted review:
-   
-   ```bash
-   workflows/shared/scripts/gerrit-post-review.sh \
-     <change_id> \
-     <vote> \
-     "<top_level_message>" \
-     <inline_comments_json>
-   ```
-   
-   Where:
-   - `<change_id>`: The Gerrit change number
-   - `<vote>`: The Code-Review vote (+2, +1, 0, -1, -2) or empty string for no vote
-   - `<top_level_message>`: The top-level review message (properly escaped)
-   - `<inline_comments_json>`: JSON-encoded inline comments, or empty string if none
-   
-   Inline comments JSON format:
+1. **Build the review JSON file** with the top-level message, inline comments, and optional labels. Every inline comment **must** explicitly set the `"unresolved"` field (`true` by default, unless the user requested resolved):
+
    ```json
    {
-     "path/to/file.py": [
-       {"line": 42, "message": "This looks wrong because..."},
-       {"line": 55, "message": "Consider using..."}
-     ],
-     "other/file.py": [
-       {"line": 10, "message": "Missing error handling"}
-     ]
+     "message": "Top-level review summary (1-2 sentences)",
+     "comments": {
+       "path/to/file.py": [
+         {"line": 42, "message": "This looks wrong because...", "unresolved": true},
+         {"line": 55, "message": "Consider using...", "unresolved": true}
+       ],
+       "other/file.py": [
+         {"line": 10, "message": "Missing error handling", "unresolved": true}
+       ]
+     },
+     "labels": {"Code-Review": 1}
    }
    ```
 
-2. **Parse the script output**:
+   **CRITICAL**: Always explicitly set the `"unresolved"` field on every inline comment. Use `true` (the default) unless the user asked for resolved comments. The Gerrit API defaults to `false` (resolved) if this field is omitted, which hides comments from the reviewer's attention.
+
+   Write this JSON to a temporary file (e.g., `/tmp/review-{change_id}.json`).
+
+2. **Call the gerrit-post-review.sh script**:
+
+   ```bash
+   workflows/shared/scripts/gerrit-post-review.sh <change_id> <review_json_file>
+   ```
+
+   Where:
+   - `<change_id>`: The Gerrit change number
+   - `<review_json_file>`: Path to the JSON file built above
+
+3. **Parse the script output**:
    - Exit code 0 = success
    - Exit code 1 = authentication failure (HTTP 401/403)
    - Exit code 2 = network/API error
@@ -124,18 +130,18 @@ Fall back to Gerrit REST API posting:
    
    The script outputs JSON with `success`, `http_status`, and `error_message` fields.
 
-3. **Handle authentication failure** (exit code 1):
+4. **Handle authentication failure** (exit code 1):
    - Inform the user: "Authentication failed. The credentials you provided were rejected by Gerrit (HTTP {status})."
    - Offer retry: "Would you like to retry with different credentials? (yes/no/cancel)"
    - Maximum 3 retry attempts
    - On 3rd failure or user cancellation, fall back to manual artifact (step 4c)
 
-4. **Handle network/API error** (exit code 2):
+5. **Handle network/API error** (exit code 2):
    - Report the error message from the script
    - Suggest remediation: "Check network access to review.opendev.org. VPN or firewall may be blocking the request."
    - Fall back to manual artifact (step 4c)
 
-5. **On success**, proceed to step 5
+6. **On success**, proceed to step 5
 
 #### 4c. Manual Artifact Fallback
 
