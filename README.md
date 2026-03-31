@@ -13,6 +13,7 @@ The platform automatically discovers workflows from this repository. Any directo
 | Workflow | Description | Skills |
 |----------|-------------|--------|
 | [**nova-review**](workflows/nova-review/) | Review Nova code changes and nova-specs proposals against project conventions and architecture | `/spec-review`, `/code-review`, `/gerrit-comment` |
+| [**nova-bug-triage**](workflows/nova-bug-triage/) | Triage Nova Launchpad bug reports by validating whether they describe genuine defects or fall into invalid categories | `/triage`, `/reproduce`, `/report`, `/update-launchpad` |
 | [**gerrit-to-gitlab**](workflows/gerrit-to-gitlab/) | Backport merged upstream OpenStack Gerrit changes to internal GitLab repository stable branches | `/backport`, `/test`, `/create-mr` |
 
 ## Using Workflows
@@ -38,6 +39,15 @@ workflows/
 │   ├── AGENTS.md          # Nova project reference (model-agnostic)
 │   ├── CLAUDE.md          # Pointer to AGENTS.md
 │   ├── rules.md           # Behavioral rules for the agent
+│   └── README.md
+├── nova-bug-triage/       # Nova Launchpad bug triage
+│   ├── .ambient/
+│   │   └── ambient.json
+│   ├── .claude/
+│   │   └── skills/        # Triage skills (triage, reproduce, report, update-launchpad)
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   ├── rules.md
 │   └── README.md
 ├── gerrit-to-gitlab/      # Gerrit-to-GitLab backport workflow
 │   ├── .ambient/
