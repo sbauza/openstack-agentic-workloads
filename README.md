@@ -27,9 +27,21 @@ This repository is designed to be consumed via the **Custom Workflow** feature i
    - **Path**: path to the workflow directory (e.g., `workflows/nova-review`)
 3. Click **"Load Workflow"**
 
+## Shared Knowledge
+
+The `knowledge/` directory contains shared project reference files that multiple workflows depend on. This avoids duplicating architecture, conventions, and design rules across workflows.
+
+| File | Contents |
+|------|----------|
+| [`knowledge/nova.md`](knowledge/nova.md) | Nova architecture, directory structure, versioning rules, core services, coding conventions, virt drivers, external dependencies, and commit conventions |
+
+Workflows that need Nova domain knowledge (e.g., `nova-review`, `nova-bug-triage`) reference `knowledge/nova.md` via `@../../knowledge/nova.md` in their `AGENTS.md` and add only workflow-specific content locally. New Nova-related workflows should follow the same pattern rather than duplicating the shared reference.
+
 ## Repository Structure
 
 ```text
+knowledge/
+└── nova.md                # Shared Nova project reference (used by Nova workflows)
 workflows/
 ├── nova-review/           # Nova code and spec review
 │   ├── .ambient/

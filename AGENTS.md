@@ -9,6 +9,8 @@ This repository contains custom ACP (Ambient Code Platform) workflow definitions
 **Key directories:**
 
 ```text
+├── knowledge/              # Shared project knowledge (referenced by workflows)
+│   └── nova.md             # Nova architecture, conventions, versioning rules
 ├── workflows/              # All workflow definitions
 │   ├── nova-review/        # Nova code and spec review
 │   └── [your-workflow]/    # New workflows go here
