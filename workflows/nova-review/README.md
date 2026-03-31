@@ -8,7 +8,7 @@ An ACP workflow for reviewing OpenStack Nova code and specifications.
 |-------|-------------|
 | `/spec-review` | Review nova-specs proposals for completeness, technical soundness, and alignment with Nova architecture |
 | `/code-review` | Review Nova code changes against coding conventions (N-codes), versioning rules, and testing requirements |
-| `/gerrit-comment` | Post a review as inline and top-level comments on a Gerrit change (requires Gerrit MCP server) |
+| `/gerrit-comment` | Post a review as inline and top-level comments on a Gerrit change (uses Gerrit MCP if available, otherwise REST API with HTTP auth) |
 
 ## Setup
 
@@ -19,7 +19,20 @@ This workflow works best when the Nova and nova-specs repositories are added to 
 
 If repositories are not available, the workflow will guide you to add them or you can paste code/specs inline.
 
-To post reviews to Gerrit, the **Gerrit MCP server** must be configured in your ACP session integrations.
+### Gerrit Integration
+
+The workflow supports two modes for posting reviews to Gerrit:
+
+1. **With Gerrit MCP** (preferred): Full integration via MCP server configured in your ACP session integrations
+   - Automated review posting
+   - Access to review history and patchset details
+
+2. **Without Gerrit MCP** (fallback): REST API with HTTP basic authentication
+   - Prompts for Gerrit username and password when posting reviews
+   - Credentials never stored - prompted each time, cleared after use
+   - Falls back to manual artifact generation if authentication fails
+
+The workflow automatically detects Gerrit MCP availability at startup and adapts accordingly.
 
 ## What It Checks
 
@@ -45,7 +58,15 @@ To post reviews to Gerrit, the **Gerrit MCP server** must be configured in your 
 - Transforms review findings into Gerrit top-level messages and inline file comments
 - Maps verdicts to Code-Review label votes (+1, -1, or 0)
 - Always previews the full comment and requires explicit user approval before posting
-- Falls back to saving the formatted comment locally if the MCP server is unavailable
+
+**Posting Methods**:
+- **With Gerrit MCP**: Direct programmatic posting via MCP server
+- **Without Gerrit MCP**: Posts via REST API using HTTP basic authentication
+  - Prompts for Gerrit username and password (hidden input)
+  - Credentials cleared immediately after use
+  - Maximum 3 authentication attempts on failure
+  - Falls back to manual artifact if authentication repeatedly fails
+- **Manual Artifact Fallback**: Saves formatted comment to `artifacts/nova-review/gerrit-comment-{change}.md` for manual copy-paste to Gerrit UI
 
 ## Output
 

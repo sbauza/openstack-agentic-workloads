@@ -23,12 +23,17 @@ The user will provide one of:
 
 ### 0. Handle Gerrit Topic (if provided)
 
+**Check for Gerrit MCP availability first**: Run `workflows/shared/scripts/detect-mcp.sh gerrit` and parse the JSON output to check the `available` field.
+
 If the user provides a **Gerrit topic** instead of a single change:
 
-1. **Query all changes for the topic** — use the Gerrit MCP server to list all open changes with that topic (e.g., query `topic:{name} status:open project:openstack/nova`)
-2. **Present the list** — show the user all changes in the topic with their subject, change number, and status. Ask which change they want to review in depth.
-3. **Read all sibling changes for context** — before reviewing the selected change, read the commit messages and diffs of the other changes in the topic. This gives you the full picture of the feature or fix being implemented across multiple patches. Understanding the complete topic helps you assess whether the selected change makes the right architectural choices and whether responsibilities are split correctly across the patch series.
-4. **Proceed to step 1** with the selected change, keeping the sibling context in mind throughout the review. Reference sibling changes when relevant (e.g., "this versioning bump is covered in change 123456").
+- **If Gerrit MCP is available**:
+  1. **Query all changes for the topic** — use the Gerrit MCP server to list all open changes with that topic (e.g., query `topic:{name} status:open project:openstack/nova`)
+  2. **Present the list** — show the user all changes in the topic with their subject, change number, and status. Ask which change they want to review in depth.
+  3. **Read all sibling changes for context** — before reviewing the selected change, read the commit messages and diffs of the other changes in the topic. This gives you the full picture of the feature or fix being implemented across multiple patches. Understanding the complete topic helps you assess whether the selected change makes the right architectural choices and whether responsibilities are split correctly across the patch series.
+  4. **Proceed to step 1** with the selected change, keeping the sibling context in mind throughout the review. Reference sibling changes when relevant (e.g., "this versioning bump is covered in change 123456").
+
+- **If Gerrit MCP is unavailable**: Inform the user that topic-based review requires Gerrit MCP. Ask them to provide a specific change URL or ID instead. If they want to review multiple changes in a topic, they can query the topic manually at `https://review.opendev.org/q/topic:{name}` and provide each change individually.
 
 ### 1. Gather Context (Before Reading Code)
 
@@ -36,9 +41,9 @@ Before diving into the code, build context the way an experienced reviewer would
 
 1. **Read the commit message** — understand the stated intent (bug fix? feature? refactor?)
 2. **Follow references** — open the linked bug report, spec, or blueprint. Understand the problem being solved.
-3. **Check prior review history** — use the Gerrit MCP server (or the change URL) to look at previous patchset revisions and reviewer comments. This context is essential: a design choice that looks odd in isolation may have been explicitly requested by a previous reviewer. Check whether earlier feedback was addressed or if open discussions are still unresolved
+3. **Check prior review history** — **Gerrit MCP status was checked in step 0**. If available: use the Gerrit MCP server (or the change URL) to look at previous patchset revisions and reviewer comments. This context is essential: a design choice that looks odd in isolation may have been explicitly requested by a previous reviewer. Check whether earlier feedback was addressed or if open discussions are still unresolved. **If unavailable**: Skip the review history check and note in your final review that prior reviewer comments were not examined. Suggest the user manually inspect `https://review.opendev.org/c/<change-id>`.
 4. **Survey the change shape** — look at which files are modified to get an architectural overview: is there a DB migration? RPC change? API change? New tests?
-5. **Check for related changes** — if the change belongs to a Gerrit topic and you haven't already loaded siblings (step 0), query the topic now to understand the full scope
+5. **Check for related changes** — if the change belongs to a Gerrit topic and you haven't already loaded siblings (step 0), query the topic now to understand the full scope (only if Gerrit MCP is available; otherwise skip this step)
 
 ### 2. Verify Feature Approval (if applicable)
 
@@ -129,6 +134,9 @@ Write the review to `artifacts/nova-review/code-{topic}.md` with this structure:
 
 ## Topic Context
 {If part of a topic: brief summary of the sibling changes and how this change fits into the series. Omit if single change.}
+
+## Review History
+{If Gerrit MCP was unavailable: note that prior reviewer comments were not examined and provide link for manual inspection}
 
 ## Blockers
 {Issues that must be fixed before merge}

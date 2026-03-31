@@ -31,8 +31,77 @@ When a cherry-pick produces conflicts:
 
 ## MCP Server Availability
 
-If a required MCP server (Gerrit or GitLab) is unavailable:
+The workflow supports both **MCP** and **fallback** modes for Gerrit and GitLab integrations.
 
-- Report clearly which server is missing and what functionality is affected
-- For GitLab MCP failures during MR creation, save the MR draft as an artifact for manual submission
-- Never silently fall back to alternative methods — inform the user of the situation
+**At workflow startup**, MCP availability is automatically detected. The agent will report status and adapt accordingly.
+
+### Gerrit MCP Fallback
+
+If Gerrit MCP is unavailable:
+
+1. **Metadata Fetching** (`/backport` skill):
+   - Automatically fetches change metadata via Gerrit REST API (`GET /changes/{id}/detail`)
+   - Displays fetched metadata (subject, author, status, commit hash) to user for confirmation
+   - User can confirm, edit fields, or cancel
+   - On REST API failure → falls back to manual metadata entry prompts
+
+2. **Patch Fetching** (`/backport` skill):
+   - Uses standard git fetch with Gerrit's `refs/changes` refspec
+   - Example: `git fetch https://review.opendev.org/<project> refs/changes/45/912345/3`
+   - No authentication required for merged public changes
+   - On failure → reports detailed error with remediation steps
+
+### GitLab MCP Fallback
+
+If GitLab MCP is unavailable:
+
+1. **Repository Access** (`/backport` skill):
+   - Attempts HTTPS git operations (clone, fetch, ls-remote) first
+   - On HTTPS failure → automatically fails over to SSH
+   - Prompts user for dedicated SSH private key path
+   - Validates key file exists and is readable
+   - Retries operation with `GIT_SSH_COMMAND="ssh -i <key> -o StrictHostKeyChecking=no"`
+   - On both HTTPS and SSH failure → reports detailed errors with remediation
+
+2. **MR Creation** (`/create-mr` skill):
+   - Generates MR draft artifact in Markdown format
+   - Includes: git push command, MR title, description, source/target branches
+   - Provides manual MR creation instructions for GitLab UI
+   - Saved to `artifacts/gerrit-to-gitlab/mr-template-{feature}.md`
+
+### Error Handling
+
+**Clear Error Messages**: Distinguish between:
+- "MCP unavailable" (using fallback mechanism)
+- "REST API failed" (network or API error)
+- "Authentication failed" (git credentials or SSH key issue)
+- "Operation failed" (other issues)
+
+**Remediation Steps**: Every error message includes specific next steps:
+- Network errors → check VPN, proxy, firewall
+- Git credential errors → configure git credential helper, verify access
+- SSH errors → verify SSH key registered in GitLab, check key permissions
+- Gerrit API errors → verify change exists, check network access to review.opendev.org
+
+### User Cancellation
+
+Users can cancel at any prompt by typing 'cancel':
+- During metadata confirmation/editing
+- During SSH key path prompting
+- During MR preview/approval
+- Operation halts cleanly, no partial state
+
+### Security
+
+**SSH Key Handling**:
+- User provides path to dedicated SSH private key
+- Key should be generated specifically for this workflow (isolation)
+- Key file path validated (exists, readable)
+- `GIT_SSH_COMMAND` environment variable scoped to current session only
+- No key content stored or logged
+- StrictHostKeyChecking disabled for automation (user should understand risk)
+
+**No Credential Storage**:
+- Git credentials managed by user's git credential helper
+- SSH keys provided at use-time, not stored
+- No plaintext passwords in artifacts or logs

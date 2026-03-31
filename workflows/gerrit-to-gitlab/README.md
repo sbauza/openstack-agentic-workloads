@@ -12,12 +12,30 @@ An ACP workflow for backporting merged upstream OpenStack Gerrit changes to inte
 
 ## Prerequisites
 
-This workflow requires the following MCP server integrations in your ACP session:
+### Required
 
-- **Gerrit MCP server** — for fetching upstream change metadata and patches from `review.opendev.org`
-- **GitLab MCP server** — for listing branches and creating merge requests on the internal GitLab instance
+- Internal GitLab repository that is a fork or mirror of the upstream OpenStack project (sharing common git history)
+- Git credentials configured for GitLab repository access
 
-The internal GitLab repository should be a fork or mirror of the upstream OpenStack project, sharing common git history.
+### Optional MCP Integrations
+
+The workflow supports MCP server integrations for enhanced automation, but can operate without them:
+
+**Gerrit MCP** (optional):
+- **With MCP**: Automated metadata fetching and change details
+- **Without MCP**: Uses Gerrit REST API for metadata, standard git for patches
+  - Automatic metadata fetch via `GET /changes/{id}/detail`
+  - User can confirm/edit fetched metadata
+  - Falls back to manual entry on API failure
+
+**GitLab MCP** (optional):
+- **With MCP**: Automated branch listing and MR creation
+- **Without MCP**: Uses git operations with HTTPS→SSH failover
+  - Repository access via git (clone, fetch, ls-remote)
+  - Prompts for SSH private key on HTTPS failure
+  - MR draft artifact generated for manual creation in GitLab UI
+
+The workflow automatically detects MCP availability at startup and uses the appropriate method.
 
 ## Setup
 
@@ -61,6 +79,64 @@ To test this workflow via ACP's "Custom Workflow" feature:
 3. Requires explicit user approval before proceeding
 4. Pushes the backport branch and creates the GitLab merge request
 5. Reports the MR URL or saves a draft artifact on failure
+
+## Fallback Mechanisms
+
+### Gerrit REST API Fallback
+
+When Gerrit MCP is unavailable, the `/backport` skill uses REST API for metadata fetching:
+
+1. **Automatic Metadata Fetch**:
+   - Calls `GET https://review.opendev.org/changes/{id}/detail`
+   - Extracts subject, author, status, commit hash, project, branch
+   - Handles anti-XSSI prefix (`)]}'\n`)
+   - No authentication required (public instance)
+
+2. **User Confirmation Flow**:
+   - Displays fetched metadata to user
+   - User can: confirm, edit specific fields, or cancel
+   - Edited values override fetched values
+
+3. **Fallback to Manual Entry**:
+   - If REST API fails (network error, change not found)
+   - Prompts user to manually enter metadata fields
+   - Ensures workflow can proceed even without API access
+
+4. **Patch Fetching via Git**:
+   - Uses standard git fetch with Gerrit's `refs/changes` refspec
+   - Example: `git fetch https://review.opendev.org/openstack/nova refs/changes/45/912345/3`
+   - No authentication required for merged public changes
+
+### GitLab Git Fallback
+
+When GitLab MCP is unavailable, git operations use HTTPS→SSH failover:
+
+1. **HTTPS First**:
+   - Attempts git operation (clone, fetch, ls-remote) via HTTPS
+   - Uses configured git credential helper
+   - If succeeds, workflow continues normally
+
+2. **SSH Failover on HTTPS Failure**:
+   - Notifies user of HTTPS failure
+   - Prompts for SSH private key path
+   - Validates key file exists and is readable
+   - Warns if key permissions are too permissive (not 600/400)
+   - Converts HTTPS URL to SSH format
+   - Retries operation with `GIT_SSH_COMMAND="ssh -i <key> -o StrictHostKeyChecking=no"`
+
+3. **MR Draft Artifact**:
+   - If GitLab MCP unavailable for MR creation
+   - Generates Markdown artifact with:
+     - Git push command (exact branch and remote)
+     - MR title and description (ready to copy-paste)
+     - Source and target branch information
+     - Manual steps for creating MR in GitLab UI
+   - Saved to `artifacts/gerrit-to-gitlab/mr-template-{feature}.md`
+
+4. **Error Reporting**:
+   - Both HTTPS and SSH failed: Shows both error messages
+   - Provides remediation steps for each failure type
+   - Suggests checking credentials, network, SSH key registration
 
 ## Artifact Outputs
 

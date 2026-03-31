@@ -29,7 +29,11 @@ If the nova-specs repo is not available, work with whatever the user provides.
 
 ### 1b. Check Gerrit Review History
 
-If the spec is on Gerrit, look at previous patchset revisions and reviewer comments. This context is essential: the current version of the spec may reflect decisions made in response to earlier reviewer feedback. Understanding the review history helps avoid re-raising points that were already discussed and settled, and highlights any open threads that still need resolution.
+**Check for Gerrit MCP availability first**: Run `workflows/shared/scripts/detect-mcp.sh gerrit` and parse the JSON output to check the `available` field.
+
+- **If Gerrit MCP is available**: Use Gerrit MCP tools to fetch previous patchset revisions and reviewer comments. This context is essential: the current version of the spec may reflect decisions made in response to earlier reviewer feedback. Understanding the review history helps avoid re-raising points that were already discussed and settled, and highlights any open threads that still need resolution.
+
+- **If Gerrit MCP is unavailable**: Skip the review history check. Note in your final review output (in a dedicated "Review History" section) that the Gerrit review history was not checked due to MCP unavailability, and suggest the user manually inspect the review at `https://review.opendev.org/c/<change-id>` for prior reviewer feedback.
 
 ### 1c. Verify Launchpad Blueprint
 
@@ -106,6 +110,9 @@ Write the review to `artifacts/nova-review/spec-{spec-name}.md` with this struct
 
 ## Summary
 {1-2 sentence summary of what the spec proposes and the overall assessment}
+
+## Review History
+{If Gerrit MCP was unavailable: note that review history was not checked and provide link for manual inspection}
 
 ## Structural Completeness
 {Table or checklist of required sections with status — based on the actual template}

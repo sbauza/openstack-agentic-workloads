@@ -1,6 +1,6 @@
 ---
 name: gerrit-comment
-description: Post a review as comments on a Gerrit change using the Gerrit MCP server
+description: Post a review as comments on a Gerrit change using the Gerrit MCP server or REST API fallback
 ---
 
 # Gerrit Comment
@@ -9,7 +9,6 @@ Post review findings as inline and top-level comments on an OpenStack Gerrit cha
 
 ## Prerequisites
 
-- The **Gerrit MCP server** must be configured in the ACP session
 - A completed review artifact from `/spec-review` or `/code-review` must exist
 - The user must provide or confirm the Gerrit change number
 
@@ -66,9 +65,13 @@ Show the user exactly what will be posted:
 
 Then ask: "Would you like to post these comments to Gerrit? If so, what Code-Review vote do you want to apply (e.g., +1, +2, -1, 0, or no vote)?"
 
-### 4. Post via Gerrit MCP Server
+### 4. Check MCP Availability and Post Review
 
-Once approved, use the Gerrit MCP tools to post:
+**Check for Gerrit MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gerrit` and parse the JSON output to check the `available` field.
+
+#### 4a. If Gerrit MCP is Available
+
+Use the Gerrit MCP tools to post:
 
 1. **Post the review** using `mcp__gerrit__set_review` (or equivalent):
    - `change_id`: The change number or ID
@@ -78,22 +81,149 @@ Once approved, use the Gerrit MCP tools to post:
 
 2. **Verify the post** by fetching the change details back and confirming the comment appears
 
+3. **Report success** — proceed to step 5
+
+#### 4b. If Gerrit MCP is Unavailable
+
+Fall back to Gerrit REST API posting:
+
+1. **Call the gerrit-post-review.sh script** with the formatted review:
+   
+   ```bash
+   workflows/shared/scripts/gerrit-post-review.sh \
+     <change_id> \
+     <vote> \
+     "<top_level_message>" \
+     <inline_comments_json>
+   ```
+   
+   Where:
+   - `<change_id>`: The Gerrit change number
+   - `<vote>`: The Code-Review vote (+2, +1, 0, -1, -2) or empty string for no vote
+   - `<top_level_message>`: The top-level review message (properly escaped)
+   - `<inline_comments_json>`: JSON-encoded inline comments, or empty string if none
+   
+   Inline comments JSON format:
+   ```json
+   {
+     "path/to/file.py": [
+       {"line": 42, "message": "This looks wrong because..."},
+       {"line": 55, "message": "Consider using..."}
+     ],
+     "other/file.py": [
+       {"line": 10, "message": "Missing error handling"}
+     ]
+   }
+   ```
+
+2. **Parse the script output**:
+   - Exit code 0 = success
+   - Exit code 1 = authentication failure (HTTP 401/403)
+   - Exit code 2 = network/API error
+   - Exit code 3 = invalid arguments
+   
+   The script outputs JSON with `success`, `http_status`, and `error_message` fields.
+
+3. **Handle authentication failure** (exit code 1):
+   - Inform the user: "Authentication failed. The credentials you provided were rejected by Gerrit (HTTP {status})."
+   - Offer retry: "Would you like to retry with different credentials? (yes/no/cancel)"
+   - Maximum 3 retry attempts
+   - On 3rd failure or user cancellation, fall back to manual artifact (step 4c)
+
+4. **Handle network/API error** (exit code 2):
+   - Report the error message from the script
+   - Suggest remediation: "Check network access to review.opendev.org. VPN or firewall may be blocking the request."
+   - Fall back to manual artifact (step 4c)
+
+5. **On success**, proceed to step 5
+
+#### 4c. Manual Artifact Fallback
+
+If REST API posting fails or user cancels:
+
+Write the formatted comment to `artifacts/nova-review/gerrit-comment-{change}.md`:
+
+```markdown
+# Gerrit Comment: Change {change_number}
+
+**Change URL**: https://review.opendev.org/c/openstack/nova/+/{change_number}
+**Date**: {date}
+**Vote**: {vote or "No vote"}
+
+## Top-Level Message
+
+{top_level_message}
+
+## Inline Comments
+
+### {file_path_1}
+
+**Line {line}**: {comment}
+
+**Line {line}**: {comment}
+
+### {file_path_2}
+
+**Line {line}**: {comment}
+
+## Manual Posting Instructions
+
+1. Open the change in your browser: https://review.opendev.org/c/openstack/nova/+/{change_number}
+2. Click "Reply" button
+3. Copy the top-level message into the comment box
+4. For each inline comment:
+   - Click on the line number in the file diff view
+   - Click "Draft" to add a comment
+   - Paste the comment text
+5. Select Code-Review vote: {vote or "No vote"}
+6. Click "Send" to post the review
+```
+
+Inform the user: "Failed to post review to Gerrit. The formatted comment has been saved to `artifacts/nova-review/gerrit-comment-{change}.md` for manual posting."
+
 ### 5. Report Result
+
+**On success**:
 
 Tell the user:
 - Whether the post succeeded
 - Link to the change on Gerrit
 - The vote that was applied (if any)
+- The method used (MCP or REST API)
 
-## Error Handling
+Example:
+```
+Review posted successfully via {Gerrit MCP | REST API}!
 
-- **MCP server not available**: Tell the user to configure the Gerrit MCP server in their ACP session integrations
-- **Authentication failure**: Suggest checking Gerrit credentials in workspace settings
-- **Change not found**: Verify the change number and that it's on `review.opendev.org`
-- **Post failure**: Show the error, save the formatted comment to `artifacts/nova-review/gerrit-comment-{change}.md` so the user can post manually
+**Change**: https://review.opendev.org/c/openstack/nova/+/{change_number}
+**Vote**: {vote or "No vote"}
+**Comments**: {N} inline, 1 top-level
+```
+
+**On failure**:
+
+Inform the user that the review was saved to an artifact file for manual posting, and provide the file path.
+
+## Error Conditions
+
+| Condition | Behavior |
+|-----------|----------|
+| No review artifact found | Tell user to run `/spec-review` or `/code-review` first |
+| MCP unavailable, REST API succeeds | Post via REST API, report success |
+| MCP unavailable, REST API auth fails | Retry up to 3 times, then generate manual artifact |
+| MCP unavailable, REST API network error | Generate manual artifact with error details |
+| User declines to post | Do not proceed; artifact already exists from earlier skill |
+| User cancels during retry | Generate manual artifact |
 
 ## Output
 
-On success, no artifact file is needed — the comment is on Gerrit.
+- **On success**: No artifact file needed — the comment is on Gerrit
+- **On failure**: `artifacts/nova-review/gerrit-comment-{change}.md` with manual posting instructions
 
-On failure, write the formatted comment to `artifacts/nova-review/gerrit-comment-{change}.md` for manual posting.
+### Writing Style
+
+Follow the rules in `rules.md`. In particular:
+
+- The comment preview must show exactly what will be posted — no surprises
+- Error messages must include actionable next steps with specific remediation guidance
+- Distinguish between authentication errors, network errors, and API errors

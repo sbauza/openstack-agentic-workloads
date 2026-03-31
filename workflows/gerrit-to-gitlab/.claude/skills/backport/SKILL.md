@@ -27,6 +27,10 @@ Extract the change ID from the provided URL or use the numeric ID directly.
 
 ### 2. Fetch Change Metadata
 
+**Check for Gerrit MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gerrit` and parse the JSON output to check the `available` field.
+
+#### 2a. If Gerrit MCP is Available
+
 Use the Gerrit MCP server to retrieve change details:
 
 - Subject (one-line summary)
@@ -50,6 +54,85 @@ Branch: {branch}
 Status: {status}
 ```
 
+Proceed to step 3.
+
+#### 2b. If Gerrit MCP is Unavailable
+
+Fall back to Gerrit REST API metadata fetching:
+
+1. **Call gerrit-fetch-metadata.sh script**:
+   
+   ```bash
+   workflows/shared/scripts/gerrit-fetch-metadata.sh <change_id>
+   ```
+   
+   The script fetches change details from the Gerrit REST API and outputs JSON with:
+   - `subject`
+   - `author_name`
+   - `author_email`
+   - `project`
+   - `branch`
+   - `status`
+   - `commit_message`
+   - `current_revision` (commit SHA)
+   - `parent_commits` (array of parent SHAs)
+   - `topic` (if set)
+
+2. **Parse script output**:
+   - Exit code 0 = success (JSON on stdout)
+   - Exit code 1 = change not found (HTTP 404)
+   - Exit code 2 = network/API error
+   - Exit code 3 = invalid arguments
+   - Exit code 4 = JSON parse error
+
+3. **Handle errors**:
+   - **Change not found**: Report "Gerrit change {id} not found. Verify the change ID is correct."
+   - **Network error**: Report "Cannot reach review.opendev.org. Check network access, VPN, or firewall." Offer to proceed with manual metadata entry (step 2c).
+   - **API error**: Report error details, offer manual metadata entry (step 2c).
+
+4. **Display fetched metadata** to the user:
+   
+   ```text
+   Fetched metadata via Gerrit REST API:
+   
+   Change: {change_id}
+   Subject: {subject}
+   Author: {author_name} <{author_email}>
+   Project: {project}
+   Branch: {branch}
+   Status: {status}
+   Commit: {current_revision}
+   ```
+
+5. **Prompt for confirmation or editing**:
+   
+   Ask: "Does this metadata look correct? You can:
+   - Type 'yes' to proceed
+   - Type 'edit' to modify any field
+   - Type 'cancel' to abort"
+   
+   - If **yes**: Proceed to step 3
+   - If **edit**: Prompt for each field individually, allowing the user to change values or press Enter to keep the current value
+   - If **cancel**: Stop the backport
+
+6. **On success**, proceed to step 3.
+
+#### 2c. Manual Metadata Entry Fallback
+
+If REST API fails or user requests manual entry:
+
+Prompt the user for each required field:
+- Subject
+- Author name
+- Author email
+- Project (e.g., openstack/nova)
+- Branch (e.g., master)
+- Status (should be MERGED)
+- Commit message
+- Commit SHA (required for git fetch in step 7.4)
+
+Store the manually entered metadata and proceed to step 3.
+
 ### 3. Validate Status
 
 Verify the change status is `MERGED`.
@@ -63,7 +146,7 @@ Before proceeding with the backport, check for potential issues:
 
 #### 4a. Check for Upstream Reverts
 
-Query the Gerrit MCP server for changes that revert the target change:
+**Only if Gerrit MCP is available**: Query the Gerrit MCP server for changes that revert the target change:
 
 - Search for changes with subject containing "Revert" and referencing the target change ID
 - If a revert is found and is also merged, warn the user:
@@ -72,7 +155,11 @@ Query the Gerrit MCP server for changes that revert the target change:
 
 - If the user says no, stop the backport
 
+**If Gerrit MCP is unavailable**: Skip the revert check. Note this limitation to the user: "Revert check skipped (Gerrit MCP unavailable). Verify manually that this change was not reverted upstream."
+
 #### 4b. Analyze Dependency Chain
+
+**Only if Gerrit MCP is available**:
 
 1. **Check parent commits**: From the change metadata, examine parent commits. For merge commits (multiple parents), the second parent typically represents the feature branch.
 
@@ -87,6 +174,8 @@ Query the Gerrit MCP server for changes that revert the target change:
    Store internally:
    - Parent commit hashes from change metadata
    - Related change commit hashes from topic query (if any)
+
+**If Gerrit MCP is unavailable**: Skip dependency analysis. Inform the user: "Dependency analysis skipped (Gerrit MCP unavailable). Cherry-pick conflicts may indicate missing prerequisites."
 
 #### 4c. Report Dependencies (deferred)
 
@@ -178,10 +267,11 @@ Ask the user for the backport target:
 1. **GitLab project path**: "Which internal GitLab project should receive this backport? (e.g., `internal/nova`)"
 2. **Stable branch name**: "Which stable branch should the change be applied to? (e.g., `stable/2024.2`)"
 
-Validate the stable branch exists using the GitLab MCP server to list branches. If the branch does not exist:
+**Check for GitLab MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gitlab` and parse the JSON output.
 
-- List available branches that match `stable/*`
-- Ask the user to select one or provide a different branch name
+- **If GitLab MCP is available**: Validate the stable branch exists using the GitLab MCP server to list branches. If the branch does not exist, list available branches that match `stable/*` and ask the user to select one or provide a different branch name.
+
+- **If GitLab MCP is unavailable**: Skip branch validation. Inform the user: "GitLab MCP unavailable — branch existence will be verified during git operations."
 
 ### 6. Prompt for Metadata
 
@@ -192,47 +282,148 @@ Ask the user for commit message metadata:
 
 ### 7. Clone and Cherry-Pick
 
-1. Clone or fetch the internal GitLab repository if not already available locally:
+#### 7.1. Clone or Fetch Internal Repository
 
+**Check for GitLab MCP availability** (from step 5b check).
+
+**If GitLab MCP is available**:
+
+Clone or fetch the internal GitLab repository if not already available locally:
+
+```bash
+git clone <gitlab-repo-url> /workspace/repos/<project-name>
+```
+
+Or if already cloned, fetch the latest:
+
+```bash
+git fetch origin
+```
+
+**If GitLab MCP is unavailable**:
+
+Attempt HTTPS git operations first. If they fail, use the SSH failover helper:
+
+1. **Try HTTPS clone/fetch**:
+   
    ```bash
-   git clone <gitlab-repo-url> /workspace/repos/<project-name>
+   git clone https://gitlab.example.com/<project-path>.git /workspace/repos/<project-name>
    ```
-
-   Or if already cloned, fetch the latest:
-
+   
+   Or:
+   
    ```bash
    git fetch origin
    ```
 
-2. Checkout the target stable branch:
-
+2. **On HTTPS failure** (authentication error, network error):
+   
+   Call the SSH failover helper:
+   
    ```bash
-   git checkout <stable_branch>
-   git pull origin <stable_branch>
+   workflows/shared/scripts/gitlab-ssh-failover.sh \
+     <operation> \
+     <gitlab_url> \
+     <project_path> \
+     <local_path>
    ```
+   
+   Where:
+   - `<operation>`: `clone` or `fetch`
+   - `<gitlab_url>`: GitLab instance URL (e.g., `gitlab.example.com`)
+   - `<project_path>`: Project path (e.g., `internal/nova`)
+   - `<local_path>`: Local repository path (e.g., `/workspace/repos/nova`)
+   
+   The script will:
+   - Prompt the user for an SSH private key file path
+   - Validate the key file exists and is readable
+   - Retry the git operation with `GIT_SSH_COMMAND="ssh -i <key> -o StrictHostKeyChecking=no"`
+   - Return exit code 0 on success, non-zero on failure
 
-3. Create a backport branch (new backport session only):
+3. **Parse script output**:
+   - Exit code 0 = success
+   - Exit code 1 = SSH key file not found or not readable
+   - Exit code 2 = git operation failed even with SSH
+   - Exit code 3 = invalid arguments
+   - Exit code 4 = user cancelled
 
+4. **Handle errors**:
+   - **SSH key error**: Report "SSH key file not found or not readable. Verify the path and permissions."
+   - **Git operation failed**: Report "Git operation failed with both HTTPS and SSH. Check GitLab access permissions and network connectivity."
+   - **User cancelled**: Stop the backport
+
+5. **On success**, proceed to step 7.2
+
+#### 7.2. Checkout Target Branch
+
+```bash
+git checkout <stable_branch>
+git pull origin <stable_branch>
+```
+
+#### 7.3. Create Backport Branch
+
+**For new backport sessions only**:
+
+```bash
+git checkout -b backport/<change_id>-to-<stable_branch>
+```
+
+The branch name uses the first change ID to anchor the branch. Subsequent cherry-picks are added to this same branch.
+
+**For existing backport sessions** (selected in step 5a), this step is skipped — the branch was already checked out.
+
+#### 7.4. Fetch Upstream Commit
+
+**Determine fetch method based on Gerrit MCP availability** (checked in step 2):
+
+**If Gerrit MCP is available**:
+
+Add the upstream remote and fetch:
+
+```bash
+git remote add upstream https://opendev.org/<project>.git
+git fetch upstream
+```
+
+**If Gerrit MCP is unavailable**:
+
+Use git fetch with Gerrit's `refs/changes` refspec:
+
+1. **Call gerrit-git-fetch.sh script**:
+   
    ```bash
-   git checkout -b backport/<change_id>-to-<stable_branch>
+   workflows/shared/scripts/gerrit-git-fetch.sh \
+     <change_id> \
+     <project> \
+     <commit_sha> \
+     <local_repo_path>
    ```
+   
+   The script:
+   - Constructs the Gerrit refspec: `refs/changes/{last2}/{change_id}/{patchset}`
+   - Fetches the specific ref from review.opendev.org
+   - Verifies the fetched commit SHA matches the expected value
+   - Returns exit code 0 on success
 
-   The branch name uses the first change ID to anchor the branch. Subsequent cherry-picks are added to this same branch.
+2. **Parse script output**:
+   - Exit code 0 = success (commit fetched and verified)
+   - Exit code 1 = fetch failed (refspec not found or network error)
+   - Exit code 2 = commit SHA mismatch
+   - Exit code 3 = invalid arguments
 
-   **For existing backport sessions** (selected in step 5a), this step is skipped — the branch was already checked out.
+3. **Handle errors**:
+   - **Fetch failed**: Report "Could not fetch commit from Gerrit. The change may have been abandoned or the patchset removed. Verify the change exists and is merged."
+   - **SHA mismatch**: Report "Fetched commit SHA does not match expected value. The change metadata may be stale."
+   - Offer to abort or continue with manual git commands
 
-4. Add the upstream remote if not already present:
+4. **On success**, proceed to step 7.5
 
-   ```bash
-   git remote add upstream https://opendev.org/<project>.git
-   git fetch upstream
-   ```
+#### 7.5. Cherry-Pick
 
-5. Cherry-pick the upstream commit:
-
-   ```bash
-   git cherry-pick -x <commit_hash>
-   ```
+```bash
+git cherry-pick -x <commit_hash>
+```
 
 If the cherry-pick succeeds cleanly, proceed to step 9 (Augment Commit Message).
 
@@ -493,10 +684,13 @@ After presenting the summary, offer:
 |-----------|----------|
 | Change not found | Report: "Could not find Gerrit change {id}. Please verify the URL or ID." |
 | Change not MERGED | Report: "This change has status '{status}'. Only merged changes can be backported." |
-| Gerrit MCP unavailable | Report: "The Gerrit MCP server is not available. Please check your ACP session integrations." |
-| GitLab MCP unavailable | Report: "The GitLab MCP server is not available. Please check your ACP session integrations." |
-| Stable branch not found | List available branches and ask the user to select one. |
-| Cherry-pick fails (not conflict) | Report the git error and suggest manual intervention. |
+| Gerrit MCP unavailable | Fall back to REST API metadata fetch, then git refspec fetch |
+| GitLab MCP unavailable | Fall back to HTTPS/SSH git operations |
+| REST API metadata fetch fails | Fall back to manual metadata entry |
+| Git fetch fails (both methods) | Report error with remediation steps |
+| SSH key invalid | Report error, allow retry or cancellation |
+| Stable branch not found | List available branches (if GitLab MCP available) or skip validation |
+| Cherry-pick fails (not conflict) | Report the git error and suggest manual intervention |
 
 ## Output
 
@@ -509,3 +703,4 @@ Follow the rules in `rules.md`. In particular:
 - Be specific — cite change IDs, file paths, and commit hashes
 - Explain what the upstream change does before showing the MR summary
 - Each error message should be self-contained and actionable
+- Distinguish between MCP unavailable (using fallback), network errors, authentication errors, and operation failures

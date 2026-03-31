@@ -11,7 +11,6 @@ Push a prepared backport branch to GitLab and create a merge request. This skill
 
 - A completed `/backport` run with a clean cherry-pick (no unresolved conflicts)
 - The backport branch exists locally with the augmented commit message(s)
-- The GitLab MCP server is configured in the ACP session
 
 ## Input
 
@@ -138,6 +137,10 @@ If the push fails:
 
 ### 7. Create Merge Request
 
+**Check for GitLab MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gitlab` and parse the JSON output to check the `available` field.
+
+#### 7a. If GitLab MCP is Available
+
 Use the GitLab MCP server to create the merge request with:
 
 - `source_branch`: The backport branch name
@@ -146,9 +149,59 @@ Use the GitLab MCP server to create the merge request with:
 - `description`: The composed MR description from step 3 (backported commits table + traceability table)
 - `project_path`: The internal GitLab project path
 
+On success, proceed to step 8 (success reporting).
+
+On failure, proceed to step 7b (manual MR template generation).
+
+#### 7b. If GitLab MCP is Unavailable
+
+Generate a manual MR template and provide creation instructions:
+
+Write `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md`:
+
+```markdown
+# Merge Request Template: {mr_title}
+
+**GitLab Project**: {gitlab_project}
+**Source Branch**: {source_branch}
+**Target Branch**: {target_branch}
+**Commits**: {N}
+
+## Title
+
+{mr_title}
+
+## Description
+
+{full composed MR description from step 3 — backported commits table + traceability table}
+
+## Manual Creation Instructions
+
+1. Open your GitLab instance in a browser
+2. Navigate to the project: https://{gitlab_instance}/{gitlab_project}
+3. Click "Merge requests" in the left sidebar
+4. Click "New merge request"
+5. Select source branch: `{source_branch}`
+6. Select target branch: `{target_branch}`
+7. Click "Compare branches and continue"
+8. Enter the title above in the "Title" field
+9. Copy the description above (everything under "## Description") into the "Description" field
+10. Review and click "Create merge request"
+
+## Git Push Command (if not already pushed)
+
+```bash
+git push origin {source_branch}
+```
+```
+
+Inform the user: "GitLab MCP is unavailable. An MR template has been saved to `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md` with manual creation instructions."
+
+Proceed to step 8 (report result with manual instructions).
+
 ### 8. Report Result
 
-**On success**:
+#### 8a. On Success (GitLab MCP)
 
 Report the MR URL and status:
 
@@ -162,7 +215,27 @@ Merge request created successfully!
 **Commits**: {N}
 ```
 
-**On failure**:
+#### 8b. On Manual Template Generation (GitLab MCP Unavailable)
+
+Report the template location and provide guidance:
+
+```text
+GitLab MCP unavailable — MR template generated.
+
+**Template**: artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md
+**Source**: {source_branch} -> {target_branch}
+**Project**: {gitlab_project}
+**Commits**: {N}
+
+The template contains:
+- Complete MR title and description
+- Manual creation instructions for GitLab UI
+- Git push command (if needed)
+
+Open the template file to view the full instructions.
+```
+
+#### 8c. On Failure (GitLab MCP Error)
 
 Report the error and save the MR draft for manual creation:
 
@@ -203,14 +276,15 @@ Inform the user: "Failed to create the merge request. The MR draft has been save
 |-----------|----------|
 | No backport artifact found | Tell user to run `/backport` first |
 | Unresolved conflicts in backport | Tell user to resolve conflicts before creating MR |
-| GitLab MCP unavailable | Save MR draft to artifact and provide manual steps |
+| GitLab MCP unavailable | Generate manual MR template with creation instructions |
 | Push fails (auth/permissions) | Report error, save draft, suggest checking credentials |
-| MR creation fails | Save draft to artifact with error details |
+| MR creation fails (GitLab MCP error) | Save draft to artifact with error details |
 | User declines approval | Do not proceed; inform user they can re-run when ready |
 
 ## Output
 
-- **On success**: No artifact file needed — MR is on GitLab. Report MR URL.
+- **On success (GitLab MCP)**: No artifact file needed — MR is on GitLab. Report MR URL.
+- **On GitLab MCP unavailable**: `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md`
 - **On failure**: `artifacts/gerrit-to-gitlab/mr-draft-{branch_identifier}.md`
 
 ### Writing Style
@@ -220,3 +294,4 @@ Follow the rules in `rules.md`. In particular:
 - The MR preview must show exactly what will be created — no surprises
 - Error messages must include actionable next steps
 - Never attempt to create the MR if the push failed
+- Distinguish between "GitLab MCP unavailable" (expected, use manual template) and "MR creation failed" (unexpected error)
