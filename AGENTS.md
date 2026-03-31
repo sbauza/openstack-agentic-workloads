@@ -9,10 +9,18 @@ This repository contains custom ACP (Ambient Code Platform) workflow definitions
 **Key directories:**
 
 ```text
+├── agents/                 # Shared agent personas (reusable across workflows)
+│   ├── nova-core.md
+│   ├── bug-triager.md
+│   ├── backport-specialist.md
+│   ├── nova-coresec.md
+│   └── openstack-operator.md
 ├── knowledge/              # Shared project knowledge (referenced by workflows)
 │   └── nova.md             # Nova architecture, conventions, versioning rules
 ├── workflows/              # All workflow definitions
 │   ├── nova-review/        # Nova code and spec review
+│   ├── nova-bug-triage/    # Nova Launchpad bug triage
+│   ├── gerrit-to-gitlab/   # Upstream backport to internal GitLab
 │   └── [your-workflow]/    # New workflows go here
 ├── AGENTS.md               # This file (model-agnostic guidelines)
 ├── CLAUDE.md               # Pointer to AGENTS.md (Claude-specific)
@@ -63,6 +71,52 @@ All workflows in this repository must follow these principles:
 - **Use in-tree docs as the source of truth.** Reference each project's contributor documentation rather than forking rules into the workflow. If the in-tree docs are incomplete, suggest improving them upstream.
 - **Model-agnostic where possible.** Project knowledge goes in `AGENTS.md` (usable by any AI tool); `CLAUDE.md` is a thin pointer for Claude-specific tooling.
 - **Human decides, agent assists.** Workflows provide analysis and draft comments, but the human makes final decisions (e.g., Gerrit votes). Never automate actions that should require human judgement.
+
+---
+
+## Agent Personas
+
+The `agents/` directory contains shared agent personas — reusable role definitions that workflows can invoke as subagents via the `@agent-name.md` syntax. Each persona file uses YAML frontmatter (`name`, `description`, `tools`) and a structured body defining personality, domain knowledge, and key behaviors.
+
+### Available Personas
+
+| Persona | File | Primary Use |
+|---------|------|-------------|
+| Nova Core Reviewer | `agents/nova-core.md` | Code review: versioning, conductor boundary, API microversions, upgrade safety, architectural fit |
+| OpenStack Bug Triager | `agents/bug-triager.md` | Bug triage: classification, source validation, Launchpad lifecycle |
+| Backport Specialist | `agents/backport-specialist.md` | Backporting: dependency analysis, conflict resolution, traceability |
+| Nova Core Security | `agents/nova-coresec.md` | Security: privsep, RBAC policies, credential handling, OSSA |
+| OpenStack Operator | `agents/openstack-operator.md` | Operations: config issues, deployment topology, upgrade paths |
+
+### How Workflows Use Personas
+
+Skills and commands reference personas with the `@` syntax to invoke them as collaborating subagents:
+
+```markdown
+## Process
+
+1. Invoke **@nova-core.md** to assess architectural fit, versioning, and API correctness
+2. If the change touches nova/privsep/ or nova/policies/, invoke **@nova-coresec.md**
+```
+
+Each `@agent-name.md` reference spawns a subagent with the persona's instructions as its context. This enables multi-perspective analysis without overloading a single agent's context.
+
+### Creating New Personas
+
+When adding a persona:
+
+1. Create the file in `agents/{persona-name}.md`
+2. Include YAML frontmatter with `name`, `description`, and `tools`
+3. Define personality, communication style, domain knowledge, and key behaviors
+4. Reference the persona from workflow skills using `@../../agents/{persona-name}.md`
+5. Document the persona in this table
+
+### Guidelines
+
+- **Shared personas** go in `agents/` — use when the persona is relevant to multiple workflows
+- **Workflow-specific personas** go in `workflows/{name}/.claude/agents/` — use when tightly coupled to one workflow
+- **Don't over-fragment** — each subagent invocation costs context and latency. Use personas when distinct expertise adds value, not for every subtask
+- **OpenStack-specific knowledge** — personas should encode domain expertise (versioning rules, Gerrit conventions, oslo patterns) rather than generic software roles
 
 ---
 

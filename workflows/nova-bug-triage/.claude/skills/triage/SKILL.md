@@ -7,6 +7,12 @@ description: Fetch a Nova Launchpad bug, validate against source code, and class
 
 Fetch bug details from Launchpad, display a structured summary, analyze the report against the Nova source checkout, and classify whether the bug is valid or falls into an invalid category.
 
+**Agent Collaboration**: Invoke shared agent personas for specialized triage analysis:
+
+- **@bug-triager.md** — Invoke for every triage to apply systematic validity classification and Launchpad lifecycle knowledge
+- **@openstack-operator.md** — Invoke when the bug report suggests a configuration or deployment issue (misconfiguration signals, operator-provided logs, upgrade-related symptoms)
+- **@nova-coresec.md** — Invoke when the bug has `"security_related": true` or describes potential security vulnerabilities
+
 ## Input
 
 A Launchpad bug ID (integer) or full URL.

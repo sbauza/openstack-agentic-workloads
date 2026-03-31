@@ -9,6 +9,11 @@ You are reviewing OpenStack Nova code changes. Your goal is to ensure that the c
 
 **Do not re-check what deterministic tools already enforce.** Style violations (N-codes, import ordering, etc.) are caught by `tox -e pep8`. Focus your review on things that require human judgement.
 
+**Agent Collaboration**: Invoke shared agent personas for specialized review where appropriate:
+
+- **@nova-core.md** — Invoke for every review to assess versioning rules, conductor boundary, API microversions, upgrade safety, and architectural fit
+- **@nova-coresec.md** — Invoke when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, or credential-adjacent code
+
 ## Input
 
 The user will provide one of:

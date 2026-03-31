@@ -4,6 +4,10 @@
 
 @rules.md
 
+## Agent Personas
+
+@../../agents/backport-specialist.md
+
 ## Workflow Overview
 
 This workflow enables OpenStack operators to backport merged upstream Gerrit changes to internal GitLab repository stable branches. It automates the fetch-analyze-cherry-pick-MR cycle while keeping the human in control of all external actions.

@@ -7,6 +7,10 @@ description: Fetch a merged upstream Gerrit change, cherry-pick it to an interna
 
 You are backporting a merged upstream OpenStack Gerrit change to an internal GitLab repository stable branch. Your goal is to fetch the change, validate it, apply it via cherry-pick, augment the commit message with traceability metadata, and prepare a merge request for the user to review.
 
+**Agent Collaboration**: Invoke the shared backport specialist persona for analysis:
+
+- **@backport-specialist.md** — Invoke for dependency analysis (step 4) and conflict resolution guidance (step 8) to leverage stable branch knowledge, release mapping, and conflict explanation expertise
+
 This skill supports multi-commit backports: you can run `/backport` multiple times to accumulate cherry-picks on the same branch, then create a single MR containing all commits via `/create-mr`.
 
 ## Input

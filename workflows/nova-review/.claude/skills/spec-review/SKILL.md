@@ -7,6 +7,11 @@ description: Review a nova-specs proposal for architectural soundness, completen
 
 You are reviewing an OpenStack Nova specification proposal. Your goal is to provide a thorough, constructive review that assesses not just the format and structure, but whether the proposed architectural changes genuinely fit into Nova's design and are implementable without hidden costs.
 
+**Agent Collaboration**: Invoke shared agent personas for specialized review where appropriate:
+
+- **@nova-core.md** — Invoke for every spec review to assess architectural fit, versioning implications, upgrade safety, and conductor boundary compliance
+- **@nova-coresec.md** — Invoke when the spec proposes changes to privsep, policies, or credential handling
+
 ## Input
 
 The user will provide one of:
