@@ -39,7 +39,27 @@ Clone this repository and run `claude` from within it. Claude Code automatically
 - **Skills** from `.claude/skills/*/SKILL.md` within each workflow directory — these are the canonical skill files that Cursor also reads via symlinks
 - **Per-workflow context** — each workflow has its own `CLAUDE.md` that loads the workflow's `AGENTS.md` and `rules.md`, plus shared knowledge from `knowledge/` and agent personas from `agents/`
 
-To work on a specific workflow, `cd` into its directory (e.g., `workflows/nova-review/`) so Claude Code picks up the workflow-specific `CLAUDE.md` and its skills.
+#### Working with an OpenStack repo (e.g., Nova)
+
+The workflows in this repository are designed to analyze and act on OpenStack project source code (Nova, Neutron, etc.) without bundling that code here. To use a workflow with Claude Code:
+
+1. Clone both repositories side by side:
+
+   ```bash
+   git clone https://github.com/sbauza/openstack-agentic-workflows.git
+   git clone https://opendev.org/openstack/nova.git
+   ```
+
+2. Run `claude` from the workflow directory:
+
+   ```bash
+   cd openstack-agentic-workflows/workflows/nova-review
+   claude
+   ```
+
+3. Claude Code loads the workflow's `CLAUDE.md`, skills, rules, and personas automatically. It can read and edit files anywhere on disk, so it will access the Nova repo at its cloned path (e.g., `../../nova/` or `/path/to/nova/`) when skills reference it.
+
+This works because Claude Code is not restricted to the current directory for file access — it uses the working directory only for context discovery (`CLAUDE.md`, `.claude/skills/`). The skills themselves reference the target repo by path.
 
 ### Ambient Code Platform (ACP)
 
