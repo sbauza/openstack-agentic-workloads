@@ -1,12 +1,12 @@
 # OpenStack Agentic Workflows
 
-Custom workflow repository for OpenStack services, primarily consumed by the [Ambient Code Platform](https://ambient.code) (ACP).
+Workflow repository for OpenStack services, usable with **Cursor**, **Claude Code**, and the **Ambient Code Platform** (ACP).
 
 ## Overview
 
-This repository contains ACP workflow definitions tailored for OpenStack development. Each workflow provides structured processes — skills, rules, and project-specific knowledge — that guide AI agents through complex OpenStack tasks like code review, spec authoring, bug triage, backporting, and Gerrit interaction.
+This repository contains workflow definitions tailored for OpenStack development. Each workflow provides structured processes — skills, rules, and project-specific knowledge — that guide AI agents through complex OpenStack tasks like code review, spec authoring, bug triage, backporting, and Gerrit interaction.
 
-The platform automatically discovers workflows from this repository. Any directory under `workflows/` with a valid `.ambient/ambient.json` file appears in the ACP UI.
+All content is authored once and discovered by multiple tools through standard conventions and symlinks — no duplication across tools.
 
 ## Available Workflows
 
@@ -20,9 +20,30 @@ The platform automatically discovers workflows from this repository. Any directo
 
 ## Using Workflows
 
+### Cursor
+
+Clone or open this repository as a project in Cursor. Everything is auto-discovered:
+
+- **Skills** from `.agents/skills/` — all 17 workflow skills are available via symlinks, prefixed by workflow to avoid name collisions (e.g., `gtg-backport`, `jira-triage`, `review-code-review`). Type `/` in the agent chat to invoke a skill directly.
+- **Rules** from `.cursor/rules/` — the global behavioral rules (`rules.md`) are loaded via an `.mdc` rule file with `alwaysApply: true`
+- **Agent personas** from `agents/` — the shared persona files (e.g., `nova-core.md`, `bug-triager.md`) are auto-detected
+- **Project context** from `AGENTS.md` — read automatically at startup, including nested `AGENTS.md` files in each workflow directory
+
+No plugin or additional configuration is needed. Open the repository in Cursor and all skills, rules, and personas are available immediately.
+
+### Claude Code
+
+Clone this repository and run `claude` from within it. Claude Code automatically reads:
+
+- **`CLAUDE.md`** at the project root — a thin pointer that loads `AGENTS.md` (project guidelines) and `rules.md` (behavioral rules) into the agent context
+- **Skills** from `.claude/skills/*/SKILL.md` within each workflow directory — these are the canonical skill files that Cursor also reads via symlinks
+- **Per-workflow context** — each workflow has its own `CLAUDE.md` that loads the workflow's `AGENTS.md` and `rules.md`, plus shared knowledge from `knowledge/` and agent personas from `agents/`
+
+To work on a specific workflow, `cd` into its directory (e.g., `workflows/nova-review/`) so Claude Code picks up the workflow-specific `CLAUDE.md` and its skills.
+
 ### Ambient Code Platform (ACP)
 
-This repository is designed to be consumed via the **Custom Workflow** feature in ACP:
+Use the **Custom Workflow** feature in ACP:
 
 1. In your ACP session, select **"Custom Workflow..."**
 2. Fill in the fields:
@@ -31,20 +52,17 @@ This repository is designed to be consumed via the **Custom Workflow** feature i
    - **Path**: path to the workflow directory (e.g., `workflows/nova-review`)
 3. Click **"Load Workflow"**
 
-### Cursor
+ACP reads `.ambient/ambient.json` for the workflow configuration (`systemPrompt`, `startupPrompt`) and discovers skills from `.claude/skills/*/SKILL.md`.
 
-Add this repository as a project in Cursor. Cursor automatically discovers:
+### How Discovery Works Across Tools
 
-- **Skills** from `.agents/skills/` — all 17 workflow skills are available via symlinks, prefixed by workflow to avoid name collisions (e.g., `gtg-backport`, `jira-triage`, `review-code-review`)
-- **Rules** from `.cursor/rules/` — the global behavioral rules (`rules.md`) are loaded via an `.mdc` rule file
-- **Agent personas** from `agents/` — the shared persona files are auto-detected
-- **Project context** from `AGENTS.md` — read automatically by Cursor at startup
-
-No additional configuration is needed. Open the repository in Cursor and all skills, rules, and personas are available immediately.
-
-### Claude Code
-
-Clone the repository and work from within it. Claude Code reads `CLAUDE.md` (which points to `AGENTS.md` and `rules.md`) and discovers skills from `.claude/skills/*/SKILL.md` within each workflow directory.
+| Component | Canonical location | Cursor | Claude Code | ACP |
+|-----------|-------------------|--------|-------------|-----|
+| Skills | `workflows/{name}/.claude/skills/*/SKILL.md` | `.agents/skills/` symlinks | `.claude/skills/` directly | via `systemPrompt` |
+| Rules | `rules.md` | `.cursor/rules/*.mdc` | `CLAUDE.md` → `@rules.md` | `systemPrompt` embeds rules |
+| Personas | `agents/*.md` | auto-detected | `@../../agents/*.md` refs | `systemPrompt` references |
+| Knowledge | `knowledge/*.md` | auto-detected | `@../../knowledge/*.md` refs | `systemPrompt` references |
+| Project context | `AGENTS.md` | auto-detected | `CLAUDE.md` → `@AGENTS.md` | `systemPrompt` embeds |
 
 ## Shared Knowledge
 
