@@ -9,6 +9,10 @@ This repository contains custom ACP (Ambient Code Platform) workflow definitions
 **Key directories:**
 
 ```text
+├── .agents/
+│   └── skills/             # Cursor skill discovery (symlinks to .claude/skills/)
+├── .cursor/
+│   └── rules/              # Cursor rule files (.mdc format)
 ├── agents/                 # Shared agent personas (reusable across workflows)
 │   ├── nova-core.md
 │   ├── bug-triager.md
@@ -242,7 +246,35 @@ Follow the rules in `rules.md`.
 4. Add `CLAUDE.md` as a pointer: `@AGENTS.md`
 5. Add `rules.md` with behavioral rules
 6. Add skills in `.claude/skills/`
-7. Add `README.md`
+7. Add symlinks in `.agents/skills/` for Cursor discovery (see below)
+8. Add `README.md`
+
+### Cursor Skill Symlinks
+
+Every skill in `.claude/skills/` must also be symlinked from the root `.agents/skills/` directory so Cursor can discover it. Use a **workflow prefix** to avoid name collisions (multiple workflows may have skills with the same name, e.g., `triage`).
+
+**Naming convention**: `{prefix}-{skill-name}` where the prefix is a short identifier for the workflow:
+
+| Workflow | Prefix |
+|----------|--------|
+| gerrit-to-gitlab | `gtg` |
+| jira-issue-triage | `jira` |
+| nova-bug-triage | `nova-bug` |
+| nova-review | `review` |
+| nova-spec-workflow | `spec` |
+
+**Example** — adding a skill `my-skill` to the `nova-review` workflow:
+
+```bash
+# 1. Create the skill (Claude Code / ACP path)
+mkdir -p workflows/nova-review/.claude/skills/my-skill
+# ... write SKILL.md ...
+
+# 2. Symlink for Cursor discovery
+ln -s ../../workflows/nova-review/.claude/skills/my-skill .agents/skills/review-my-skill
+```
+
+The symlink path is always `../../workflows/{workflow}/.claude/skills/{skill}` relative to `.agents/skills/`.
 
 ### Checklist for New Workflows
 
@@ -253,6 +285,7 @@ Follow the rules in `rules.md`.
 - [ ] `AGENTS.md` references in-tree docs rather than duplicating rules
 - [ ] Skills do not duplicate deterministic checks (linters, CI)
 - [ ] Human approval is required before any external action (Gerrit posts, etc.)
+- [ ] Skills are symlinked in `.agents/skills/` with workflow prefix
 - [ ] `README.md` documents the workflow
 
 ---
@@ -272,6 +305,7 @@ Follow the rules in `rules.md`.
 - Create new file in `.claude/skills/{skill-name}/SKILL.md`
 - Add the skill to the `systemPrompt` skill list
 - Update `results` in ambient.json if new artifacts are created
+- Add a symlink in `.agents/skills/{prefix}-{skill-name}` for Cursor discovery
 
 **Modifying systemPrompt:**
 
@@ -368,14 +402,15 @@ Present the review. Ask the user what vote they want to apply.
 
 ### File Locations
 
-| What | Where |
-|------|-------|
-| Workflow config | `workflows/{name}/.ambient/ambient.json` |
-| Skills | `workflows/{name}/.claude/skills/{skill}/SKILL.md` |
-| Commands | `workflows/{name}/.claude/commands/*.md` |
-| Project reference | `workflows/{name}/AGENTS.md` |
-| Behavioral rules | `workflows/{name}/rules.md` |
-| Artifacts (runtime) | `artifacts/{name}/` |
+| What | Where | Discovered by |
+|------|-------|---------------|
+| Workflow config | `workflows/{name}/.ambient/ambient.json` | ACP |
+| Skills (source) | `workflows/{name}/.claude/skills/{skill}/SKILL.md` | Claude Code, ACP |
+| Skills (symlinks) | `.agents/skills/{prefix}-{skill}/` | Cursor |
+| Commands | `workflows/{name}/.claude/commands/*.md` | Claude Code, ACP |
+| Project reference | `AGENTS.md` (root and per-workflow) | All tools |
+| Behavioral rules | `rules.md` / `.cursor/rules/*.mdc` | Claude Code, ACP / Cursor |
+| Artifacts (runtime) | `artifacts/{name}/` | All tools |
 
 ### Required ambient.json Fields
 

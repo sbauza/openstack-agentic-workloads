@@ -1,0 +1,6 @@
+---
+description: Global behavioral rules for all OpenStack agentic workflows — human-in-the-loop decisions, self-review, and comment style
+alwaysApply: true
+---
+
+@rules.md
