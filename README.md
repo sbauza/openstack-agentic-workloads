@@ -14,6 +14,7 @@ The platform automatically discovers workflows from this repository. Any directo
 |----------|-------------|--------|
 | [**nova-review**](workflows/nova-review/) | Review Nova code changes and nova-specs proposals against project conventions and architecture | `/spec-review`, `/code-review`, `/gerrit-comment` |
 | [**nova-bug-triage**](workflows/nova-bug-triage/) | Triage Nova Launchpad bug reports by validating whether they describe genuine defects or fall into invalid categories | `/triage`, `/reproduce`, `/report`, `/update-launchpad` |
+| [**jira-issue-triage**](workflows/jira-issue-triage/) | Triage Nova JIRA issue reports against source code, classifying validity and generating update instructions | `/triage`, `/reproduce`, `/report`, `/update-jira` |
 | [**nova-spec-workflow**](workflows/nova-spec-workflow/) | Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form feature descriptions with architectural review | `/create-spec`, `/refine-spec`, `/blueprint` |
 | [**gerrit-to-gitlab**](workflows/gerrit-to-gitlab/) | Backport merged upstream OpenStack Gerrit changes to internal GitLab repository stable branches | `/backport`, `/test`, `/create-mr` |
 
@@ -45,10 +46,10 @@ The `agents/` directory contains reusable agent persona definitions that workflo
 | Persona | File | Used By |
 |---------|------|---------|
 | Nova Core Reviewer | [`nova-core.md`](agents/nova-core.md) | nova-review, nova-spec-workflow |
-| Nova Core Security | [`nova-coresec.md`](agents/nova-coresec.md) | nova-review, nova-bug-triage, nova-spec-workflow |
-| OpenStack Bug Triager | [`bug-triager.md`](agents/bug-triager.md) | nova-bug-triage |
+| Nova Core Security | [`nova-coresec.md`](agents/nova-coresec.md) | nova-review, nova-bug-triage, jira-issue-triage, nova-spec-workflow |
+| OpenStack Bug Triager | [`bug-triager.md`](agents/bug-triager.md) | nova-bug-triage, jira-issue-triage |
 | Backport Specialist | [`backport-specialist.md`](agents/backport-specialist.md) | gerrit-to-gitlab |
-| OpenStack Operator | [`openstack-operator.md`](agents/openstack-operator.md) | nova-bug-triage |
+| OpenStack Operator | [`openstack-operator.md`](agents/openstack-operator.md) | nova-bug-triage, jira-issue-triage |
 
 See [`agents/README.md`](agents/README.md) for details on how personas work, when to use them, and how to create new ones.
 
@@ -79,6 +80,15 @@ workflows/
 │   │   └── ambient.json
 │   ├── .claude/
 │   │   └── skills/        # Triage skills (triage, reproduce, report, update-launchpad)
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   ├── rules.md
+│   └── README.md
+├── jira-issue-triage/     # Nova JIRA issue triage
+│   ├── .ambient/
+│   │   └── ambient.json
+│   ├── .claude/
+│   │   └── skills/        # Triage skills (triage, reproduce, report, update-jira)
 │   ├── AGENTS.md
 │   ├── CLAUDE.md
 │   ├── rules.md
