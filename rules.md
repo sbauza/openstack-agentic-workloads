@@ -27,6 +27,18 @@ Before presenting any output to the user:
 
 If you found and fixed issues, briefly note: "Self-review: Fixed [issue]"
 
+## Nova Project Knowledge Required
+
+All workflows in this repository operate on OpenStack Nova. Every workflow **must** reference `knowledge/nova.md` so the agent has access to Nova's architecture, versioning rules, coding conventions, and service topology. This applies regardless of the workflow's primary purpose — even backporting workflows need Nova context to resolve conflicts correctly.
+
+When creating or modifying a workflow, ensure `knowledge/nova.md` is loaded:
+
+- **AGENTS.md**: include `@../../knowledge/nova.md`
+- **CLAUDE.md**: inherited transitively via `@AGENTS.md`
+- **Cursor `.mdc` rules**: must include `@../knowledge/nova.md` via the workflow's `knowledge` symlink (Cursor does not follow nested `@` references)
+
+A workflow without Nova project knowledge cannot correctly assess versioning rules, conductor boundaries, or architectural fit.
+
 ## Human-Readable Comments
 
 All review comments — whether in artifacts, Gerrit, or conversation — must be written for human consumption:

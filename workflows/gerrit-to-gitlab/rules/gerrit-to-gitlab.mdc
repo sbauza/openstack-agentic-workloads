@@ -1,0 +1,19 @@
+---
+description: Gerrit to GitLab backport - cherry-pick upstream changes to internal stable branches
+alwaysApply: true
+---
+
+# Project Knowledge
+
+@../knowledge/nova.md
+
+# Workflow Configuration
+
+@../AGENTS.md
+@../rules.md
+@../global-rules.md
+
+## Agent Personas
+
+@../_agents/backport-specialist.md
+@../_agents/nova-core.md

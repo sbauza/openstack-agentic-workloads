@@ -1,4 +1,4 @@
-# Agent Guidelines for OpenStack Agentic Workloads
+# Agent Guidelines for OpenStack Agentic Workflows
 
 This document provides rules and guidance for AI agents making changes to this repository.
 
@@ -23,7 +23,7 @@ This repository contains custom ACP (Ambient Code Platform) workflow definitions
 │   ├── gerrit-to-gitlab/   # Upstream backport to internal GitLab
 │   └── [your-workflow]/    # New workflows go here
 ├── AGENTS.md               # This file (model-agnostic guidelines)
-├── CLAUDE.md               # Pointer to AGENTS.md (Claude-specific)
+├── CLAUDE.md               # Pointer to AGENTS.md (Claude Code)
 └── README.md
 ```
 
@@ -69,7 +69,7 @@ All workflows in this repository must follow these principles:
 
 - **Do not duplicate deterministic checks.** If a linter or CI job (e.g., `tox -e pep8`) already enforces a rule, the workflow must not re-check it with an LLM.
 - **Use in-tree docs as the source of truth.** Reference each project's contributor documentation rather than forking rules into the workflow. If the in-tree docs are incomplete, suggest improving them upstream.
-- **Model-agnostic where possible.** Project knowledge goes in `AGENTS.md` (usable by any AI tool); `CLAUDE.md` is a thin pointer for Claude-specific tooling.
+- **Model-agnostic where possible.** Project knowledge goes in `AGENTS.md` (usable by any AI tool); tool-specific files (`CLAUDE.md`, `.cursor-plugin/`) are thin integration layers that reference shared content without duplicating it.
 - **Human decides, agent assists.** Workflows provide analysis and draft comments, but the human makes final decisions (e.g., Gerrit votes). Never automate actions that should require human judgement.
 
 ---
@@ -82,7 +82,7 @@ The `agents/` directory contains shared agent personas — reusable role definit
 
 | Persona | File | Primary Use |
 |---------|------|-------------|
-| Nova Core Reviewer | `agents/nova-core.md` | Code review: versioning, conductor boundary, API microversions, upgrade safety, architectural fit |
+| Nova Core Reviewer | `agents/nova-core.md` | Code review, backport conflict resolution: versioning, conductor boundary, API microversions, upgrade safety, architectural fit |
 | OpenStack Bug Triager | `agents/bug-triager.md` | Bug triage: classification, source validation, Launchpad lifecycle |
 | Backport Specialist | `agents/backport-specialist.md` | Backporting: dependency analysis, conflict resolution, traceability |
 | Nova Core Security | `agents/nova-coresec.md` | Security: privsep, RBAC policies, credential handling, OSSA |
@@ -120,6 +120,65 @@ When adding a persona:
 
 ---
 
+## AI Tool Integration
+
+This repository supports multiple AI coding tools without duplicating content. All domain knowledge lives in shared files (`AGENTS.md`, `rules.md`, `knowledge/`, `agents/`). Each tool has a thin integration layer that references these shared files.
+
+### Supported Tools
+
+| Tool | Integration | How Skills Work |
+|------|-------------|-----------------|
+| **ACP (Ambient)** | `.ambient/ambient.json` per workflow | Skills in `.claude/skills/*/SKILL.md`, invoked via `/skill-name` |
+| **Claude Code** | `CLAUDE.md` per workflow | Skills in `.claude/skills/*/SKILL.md`, invoked via `/skill-name` |
+| **Cursor** | `.cursor-plugin/` per workflow | Same `SKILL.md` files, invoked by the agent from the plugin's skill registry |
+
+### How It Works
+
+- **`AGENTS.md`** and **`rules.md`** are the source of truth for domain knowledge and behavioral rules
+- **`CLAUDE.md`** files are thin pointers using `@AGENTS.md`, `@rules.md`, etc.
+- **`.cursor-plugin/plugin.json`** manifests point `skills` to `.claude/skills` and `rules` to workflow-specific `.mdc` files that `@`-reference the shared content
+- **`.ambient/ambient.json`** files define ACP-specific configuration (systemPrompt, startupPrompt)
+- **Skills use the same `SKILL.md` format** across all tools — no duplication needed
+
+### Cursor Plugin Structure
+
+Each workflow directory is a self-contained Cursor plugin. Symlink individual workflows into `~/.cursor/plugins/local/` to load them:
+
+```text
+workflows/nova-review/            # Example workflow plugin
+├── .cursor-plugin/
+│   └── plugin.json               # Plugin manifest (name + description only)
+├── .claude/skills/               # Skill definitions (shared with Claude Code / ACP)
+│   ├── code-review/SKILL.md
+│   ├── spec-review/SKILL.md
+│   └── gerrit-comment/SKILL.md
+├── skills -> .claude/skills       # Symlink: Cursor auto-detects skills/
+├── rules/
+│   └── nova-review.mdc           # Cursor rules with @-references via symlinks
+├── knowledge -> ../../knowledge   # Symlink to shared project knowledge
+├── _agents -> ../../agents        # Symlink to shared agent personas (prefixed to avoid Cursor agent auto-detection)
+└── global-rules.md -> ../../rules.md  # Symlink to repo-level rules
+```
+
+**How it works**: Cursor auto-detects components from standard directories (`skills/`, `rules/`). The `plugin.json` manifest only needs `name` and `description` — no custom paths required. Each workflow has symlinks that bridge to shared content at the repo root:
+
+- `skills/` → `.claude/skills/` — Cursor auto-detects `SKILL.md` files; Claude Code / ACP read from `.claude/skills/` directly
+- `knowledge/` → `../../knowledge/` — project knowledge referenced by `.mdc` rules via `@../knowledge/nova.md`
+- `_agents/` → `../../agents/` — agent personas referenced by `.mdc` rules via `@../_agents/nova-core.md` (prefixed with `_` to avoid collision with Cursor's agent component auto-detection)
+- `global-rules.md` → `../../rules.md` — repo-level rules referenced via `@../global-rules.md`
+
+When a workflow is symlinked into `~/.cursor/plugins/local/`, these symlinks resolve through the filesystem to the original files, making each plugin self-contained without duplicating any content.
+
+### Adding Support for a New Tool
+
+1. Identify the tool's project-level configuration mechanism
+2. Create thin integration files that reference the existing shared content
+3. Reuse existing `SKILL.md` files if the tool supports them
+4. Do **not** copy content — always reference the shared source
+5. Document the new tool in this table
+
+---
+
 ## Workflow Structure Requirements
 
 Every workflow **must** have:
@@ -136,9 +195,17 @@ Optional but common:
 ```text
 ├── .claude/
 │   ├── commands/          # Slash commands (*.md files)
-│   └── skills/            # Reusable skills (SKILL.md files)
+│   └── skills/            # Reusable skills (SKILL.md files) — shared by Claude Code and Cursor
+├── .cursor-plugin/
+│   └── plugin.json        # Cursor plugin manifest (name + description)
+├── skills -> .claude/skills       # Symlink for Cursor auto-detection
+├── rules/
+│   └── {workflow}.mdc     # Cursor rules (@-references via symlinks)
+├── knowledge -> ../../knowledge   # Symlink for Cursor plugin isolation
+├── _agents -> ../../agents        # Symlink for Cursor plugin isolation (prefixed to avoid auto-detection)
+├── global-rules.md -> ../../rules.md  # Symlink for Cursor plugin isolation
 ├── AGENTS.md              # Project-specific reference (model-agnostic)
-├── CLAUDE.md              # Pointer to AGENTS.md (for Claude tooling)
+├── CLAUDE.md              # Pointer to AGENTS.md (Claude Code)
 ├── rules.md               # Behavioral rules for the agent
 └── templates/             # Reference templates for artifact generation
 ```
@@ -242,7 +309,10 @@ Follow the rules in `rules.md`.
 4. Add `CLAUDE.md` as a pointer: `@AGENTS.md`
 5. Add `rules.md` with behavioral rules
 6. Add skills in `.claude/skills/`
-7. Add `README.md`
+7. Add symlinks: `skills` → `.claude/skills`, `knowledge` → `../../knowledge`, `_agents` → `../../agents`, `global-rules.md` → `../../rules.md`
+8. Add `.cursor-plugin/plugin.json` with `name` and `description` (Cursor auto-detects `skills/` and `rules/`)
+9. Add `rules/{workflow-name}.mdc` with `@` references via symlinks (`@../knowledge/nova.md`, `@../_agents/*.md`, `@../global-rules.md`)
+10. Add `README.md`
 
 ### Checklist for New Workflows
 
@@ -251,6 +321,10 @@ Follow the rules in `rules.md`.
 - [ ] `systemPrompt` lists all available skills/commands
 - [ ] `systemPrompt` specifies output location (`artifacts/{name}/`)
 - [ ] `AGENTS.md` references in-tree docs rather than duplicating rules
+- [ ] `CLAUDE.md` points to `AGENTS.md` and `rules.md`
+- [ ] Symlinks exist: `skills` → `.claude/skills`, `knowledge` → `../../knowledge`, `_agents` → `../../agents`, `global-rules.md` → `../../rules.md`
+- [ ] `.cursor-plugin/plugin.json` exists with `name` and `description`
+- [ ] `rules/{name}.mdc` references shared files via symlinks (`@../knowledge/nova.md`, `@../_agents/*.md`, `@../global-rules.md`)
 - [ ] Skills do not duplicate deterministic checks (linters, CI)
 - [ ] Human approval is required before any external action (Gerrit posts, etc.)
 - [ ] `README.md` documents the workflow
@@ -307,7 +381,7 @@ Use the "Custom Workflow" feature to test without merging to main:
 
 | Field | Value |
 |-------|-------|
-| **URL** | `https://github.com/sbauza/openstack-agentic-workloads.git` |
+| **URL** | `https://github.com/sbauza/openstack-agentic-workflows.git` |
 | **Branch** | The branch with your changes (e.g., `feature/my-changes`) |
 | **Path** | The workflow directory (e.g., `workflows/nova-review`) |
 

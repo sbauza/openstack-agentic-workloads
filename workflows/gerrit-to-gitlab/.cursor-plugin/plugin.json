@@ -1,0 +1,4 @@
+{
+  "name": "gerrit-to-gitlab",
+  "description": "Backport merged upstream OpenStack Gerrit changes to internal GitLab repository stable branches"
+}

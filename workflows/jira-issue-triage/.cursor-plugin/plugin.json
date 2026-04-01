@@ -1,0 +1,4 @@
+{
+  "name": "jira-issue-triage",
+  "description": "Triage Nova JIRA issue reports against source code, classifying validity and generating update instructions"
+}

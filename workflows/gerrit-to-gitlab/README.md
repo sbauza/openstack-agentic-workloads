@@ -43,7 +43,7 @@ To test this workflow via ACP's "Custom Workflow" feature:
 
 | Field | Value |
 |-------|-------|
-| **URL** | `https://github.com/sbauza/openstack-agentic-workloads.git` |
+| **URL** | `https://github.com/sbauza/openstack-agentic-workflows.git` |
 | **Branch** | The branch with your changes |
 | **Path** | `workflows/gerrit-to-gitlab` |
 

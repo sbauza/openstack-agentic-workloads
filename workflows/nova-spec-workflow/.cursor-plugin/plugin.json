@@ -1,0 +1,4 @@
+{
+  "name": "nova-spec-workflow",
+  "description": "Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form feature descriptions with architectural review"
+}

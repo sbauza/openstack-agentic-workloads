@@ -1,0 +1,4 @@
+{
+  "name": "nova-bug-triage",
+  "description": "Triage Nova Launchpad bug reports by validating whether they describe genuine defects or fall into invalid categories"
+}

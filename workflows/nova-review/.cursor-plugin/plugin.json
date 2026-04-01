@@ -1,0 +1,4 @@
+{
+  "name": "nova-review",
+  "description": "Review Nova code changes and nova-specs proposals against project conventions, versioning rules, and architecture"
+}

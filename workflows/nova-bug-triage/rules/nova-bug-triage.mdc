@@ -1,0 +1,20 @@
+---
+description: Nova Launchpad bug triage - validity classification, source validation, Launchpad lifecycle
+alwaysApply: true
+---
+
+# Project Knowledge
+
+@../knowledge/nova.md
+
+# Workflow Configuration
+
+@../AGENTS.md
+@../rules.md
+@../global-rules.md
+
+## Agent Personas
+
+@../_agents/bug-triager.md
+@../_agents/openstack-operator.md
+@../_agents/nova-coresec.md

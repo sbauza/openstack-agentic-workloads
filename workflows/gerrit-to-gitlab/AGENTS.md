@@ -1,5 +1,7 @@
 # Gerrit to GitLab — Project Reference
 
+@../../knowledge/nova.md
+
 @.ambient/ambient.json
 
 @rules.md
@@ -7,6 +9,8 @@
 ## Agent Personas
 
 @../../agents/backport-specialist.md
+
+@../../agents/nova-core.md
 
 ## Workflow Overview
 

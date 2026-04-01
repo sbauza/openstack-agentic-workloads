@@ -22,7 +22,7 @@ Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form 
 
 1. In ACP, select **"Custom Workflow..."**
 2. Fill in the fields:
-   - **URL**: `https://github.com/sbauza/openstack-agentic-workloads.git`
+   - **URL**: `https://github.com/sbauza/openstack-agentic-workflows.git`
    - **Branch**: `main`
    - **Path**: `workflows/nova-spec-workflow`
 3. Click **"Load Workflow"**

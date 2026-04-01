@@ -23,7 +23,7 @@ This workflow helps Nova bug triagers quickly classify JIRA issues against the N
 Load this workflow in ACP as a Custom Workflow:
 
 1. Go to **Custom Workflows** in your ACP session
-2. Add the repository: `https://github.com/sbauza/openstack-agentic-workloads.git`
+2. Add the repository: `https://github.com/sbauza/openstack-agentic-workflows.git`
 3. Set the branch (e.g., `main`)
 4. Set the path: `workflows/jira-issue-triage`
 
