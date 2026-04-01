@@ -12,7 +12,7 @@ You are reviewing OpenStack Nova code changes. Your goal is to ensure that the c
 **Agent Collaboration**: Invoke shared agent personas for specialized review where appropriate:
 
 - **@nova-core.md** — Invoke for every review to assess versioning rules, conductor boundary, API microversions, upgrade safety, and architectural fit
-- **@nova-coresec.md** — Invoke when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, or credential-adjacent code
+- **@nova-coresec.md** — Invoke when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, credential-adjacent code, or SSL/TLS operations (`ssl.SSLContext`, `load_cert_chain`, `wrap_socket`, certificate/key file handling)
 
 ## Input
 
@@ -66,6 +66,9 @@ Do not review the diff in isolation. Understand the broader context:
 - Consider whether the change is **globally sound** — does it fit Nova's architecture, or is it a locally correct solution that creates a larger problem?
 - If reviewing a bug fix, understand the code path that leads to the bug — does the fix address the root cause or just a symptom?
 - If the change seems cosmetic or tangential to the stated intent, flag it — unrelated modifications should be in separate patches
+- **Compare with baseline behavior**: Before flagging a potential runtime failure in changed code, check whether the baseline (pre-patch) code had the same pattern. If both old and new code pass the same values (e.g., `None` for an optional parameter), the behavior is inherited from the original design, not introduced by this change. Only flag it if the change makes things **worse** than the baseline.
+- **Trace callers and config prerequisites**: Before reporting a possible None/missing-value bug, trace how the code is actually reached. Check config option definitions, documentation, and call sites to determine whether the problematic input is possible in a valid deployment. A code path that requires operator misconfiguration to trigger is a config-validation improvement opportunity, not a bug in the patch under review.
+- **Assess security impact of suggested fixes**: When your suggested fix would skip or conditionalize a security operation (certificate loading, authentication check, TLS setup, token validation), evaluate whether the "fix" weakens security. A conditional guard that silently degrades a security property is worse than failing loudly on misconfiguration. Prefer explicit failure on bad config over silent security degradation.
 
 ### 4. Versioning Rules Check (Blockers)
 

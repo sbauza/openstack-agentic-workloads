@@ -97,6 +97,18 @@ These are patterns that CI cannot fully enforce — reviewers must watch for the
 | Ironic | `nova/virt/ironic/` | Bare-metal provisioning |
 | z/VM | `nova/virt/zvm/` | IBM z/VM mainframes |
 
+## Internal Service TLS
+
+Nova services communicate over internal channels that operators can secure with TLS:
+
+- **RPC transport** — `oslo.messaging` connections to RabbitMQ can use TLS (`[oslo_messaging_rabbit] ssl = True`, CA/cert/key options)
+- **Database** — SQLAlchemy connections to MySQL/PostgreSQL support TLS via `connection` URL parameters and `[database] connection_recycle_time`
+- **Console proxies** — novncproxy, serial console proxy use TLS between proxy and compute (e.g., VeNCrypt mutual TLS for VNC via `[vnc] auth_schemes` and associated cert options)
+- **Live migration** — libvirt live migration can use TLS (`[libvirt] live_migration_with_native_tls`)
+- **Glance/Cinder/Neutron** — connections to other OpenStack services use keystoneauth sessions over HTTPS; CA bundles configured via `[keystone_authtoken]` and per-service `cafile` options
+
+**Reviewer note — security hardening vs code bugs**: TLS configuration in Nova is **operator responsibility**. Code paths that require TLS certificates can assume they are configured when the feature is enabled. A missing certificate when the operator has enabled a TLS feature is a deployment misconfiguration, not a code bug. Reviewers should not suggest guards that silently skip TLS operations when config values are absent — failing loudly on misconfiguration is preferable to silently degrading security. See also the "CVE vs Security Hardening" distinction in `@nova-coresec.md`.
+
 ## Key External Dependencies
 
 | Service | Purpose | Integration Point |
