@@ -9,10 +9,9 @@ You are reviewing OpenStack Nova code changes. Your goal is to ensure that the c
 
 **Do not re-check what deterministic tools already enforce.** Style violations (N-codes, import ordering, etc.) are caught by `tox -e pep8`. Focus your review on things that require human judgement.
 
-**Agent Collaboration**: Invoke shared agent personas for specialized review where appropriate:
+**Agent Collaboration — MANDATORY**: Always invoke **@nova-core.md** for every review. This is not optional — nova-core assesses versioning rules, conductor boundary, API microversions, upgrade safety, architectural fit, and general review principles (including the loud-failure rule). Skip this agent only if the user explicitly asks to.
 
-- **@nova-core.md** — Invoke for every review to assess versioning rules, conductor boundary, API microversions, upgrade safety, and architectural fit
-- **@nova-coresec.md** — Invoke when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, credential-adjacent code, or SSL/TLS operations (`ssl.SSLContext`, `load_cert_chain`, `wrap_socket`, certificate/key file handling)
+Additionally, invoke **@nova-coresec.md** when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, credential-adjacent code, or SSL/TLS operations (`ssl.SSLContext`, `load_cert_chain`, `wrap_socket`, certificate/key file handling).
 
 **Context inheritance**: When invoking subagents, always pass the workflow `rules.md` and `knowledge/nova.md` content as context. Workflow rules and project knowledge take precedence over agent persona guidance.
 

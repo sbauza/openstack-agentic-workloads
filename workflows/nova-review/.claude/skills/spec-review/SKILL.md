@@ -7,10 +7,9 @@ description: Review a nova-specs proposal for architectural soundness, completen
 
 You are reviewing an OpenStack Nova specification proposal. Your goal is to provide a thorough, constructive review that assesses not just the format and structure, but whether the proposed architectural changes genuinely fit into Nova's design and are implementable without hidden costs.
 
-**Agent Collaboration**: Invoke shared agent personas for specialized review where appropriate:
+**Agent Collaboration — MANDATORY**: Always invoke **@nova-core.md** for every spec review. This is not optional — nova-core assesses architectural fit, versioning implications, upgrade safety, conductor boundary compliance, and general review principles. Skip this agent only if the user explicitly asks to.
 
-- **@nova-core.md** — Invoke for every spec review to assess architectural fit, versioning implications, upgrade safety, and conductor boundary compliance
-- **@nova-coresec.md** — Invoke when the spec proposes changes to privsep, policies, or credential handling
+Additionally, invoke **@nova-coresec.md** when the spec proposes changes to privsep, policies, or credential handling.
 
 **Context inheritance**: When invoking subagents, always pass the workflow `rules.md` and `knowledge/nova.md` content as context. Workflow rules and project knowledge take precedence over agent persona guidance.
 
