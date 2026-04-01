@@ -4,7 +4,7 @@ Custom workflow repository for OpenStack services, primarily consumed by the [Am
 
 ## Overview
 
-This repository contains ACP workflow definitions tailored for OpenStack development. Each workflow provides structured processes — skills, rules, and project-specific knowledge — that guide AI agents through complex OpenStack tasks like code review, spec review, and Gerrit interaction.
+This repository contains ACP workflow definitions tailored for OpenStack development. Each workflow provides structured processes — skills, rules, and project-specific knowledge — that guide AI agents through complex OpenStack tasks like code review, spec authoring, bug triage, backporting, and Gerrit interaction.
 
 The platform automatically discovers workflows from this repository. Any directory under `workflows/` with a valid `.ambient/ambient.json` file appears in the ACP UI.
 
@@ -14,6 +14,7 @@ The platform automatically discovers workflows from this repository. Any directo
 |----------|-------------|--------|
 | [**nova-review**](workflows/nova-review/) | Review Nova code changes and nova-specs proposals against project conventions and architecture | `/spec-review`, `/code-review`, `/gerrit-comment` |
 | [**nova-bug-triage**](workflows/nova-bug-triage/) | Triage Nova Launchpad bug reports by validating whether they describe genuine defects or fall into invalid categories | `/triage`, `/reproduce`, `/report`, `/update-launchpad` |
+| [**nova-spec-workflow**](workflows/nova-spec-workflow/) | Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form feature descriptions with architectural review | `/create-spec`, `/refine-spec`, `/blueprint` |
 | [**gerrit-to-gitlab**](workflows/gerrit-to-gitlab/) | Backport merged upstream OpenStack Gerrit changes to internal GitLab repository stable branches | `/backport`, `/test`, `/create-mr` |
 
 ## Using Workflows
@@ -35,7 +36,7 @@ The `knowledge/` directory contains shared project reference files that multiple
 |------|----------|
 | [`knowledge/nova.md`](knowledge/nova.md) | Nova architecture, directory structure, versioning rules, core services, coding conventions, virt drivers, external dependencies, and commit conventions |
 
-Workflows that need Nova domain knowledge (e.g., `nova-review`, `nova-bug-triage`) reference `knowledge/nova.md` via `@../../knowledge/nova.md` in their `AGENTS.md` and add only workflow-specific content locally. New Nova-related workflows should follow the same pattern rather than duplicating the shared reference.
+Workflows that need Nova domain knowledge (e.g., `nova-review`, `nova-bug-triage`, `nova-spec-workflow`) reference `knowledge/nova.md` via `@../../knowledge/nova.md` in their `AGENTS.md` and add only workflow-specific content locally. New Nova-related workflows should follow the same pattern rather than duplicating the shared reference.
 
 ## Agent Personas
 
@@ -43,8 +44,8 @@ The `agents/` directory contains reusable agent persona definitions that workflo
 
 | Persona | File | Used By |
 |---------|------|---------|
-| Nova Core Reviewer | [`nova-core.md`](agents/nova-core.md) | nova-review |
-| Nova Core Security | [`nova-coresec.md`](agents/nova-coresec.md) | nova-review, nova-bug-triage |
+| Nova Core Reviewer | [`nova-core.md`](agents/nova-core.md) | nova-review, nova-spec-workflow |
+| Nova Core Security | [`nova-coresec.md`](agents/nova-coresec.md) | nova-review, nova-bug-triage, nova-spec-workflow |
 | OpenStack Bug Triager | [`bug-triager.md`](agents/bug-triager.md) | nova-bug-triage |
 | Backport Specialist | [`backport-specialist.md`](agents/backport-specialist.md) | gerrit-to-gitlab |
 | OpenStack Operator | [`openstack-operator.md`](agents/openstack-operator.md) | nova-bug-triage |
@@ -87,6 +88,15 @@ workflows/
 │   │   └── ambient.json
 │   ├── .claude/
 │   │   └── skills/        # Backport skills (backport, test, create-mr)
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   ├── rules.md
+│   └── README.md
+├── nova-spec-workflow/    # Nova spec authoring from JIRA RFEs or descriptions
+│   ├── .ambient/
+│   │   └── ambient.json
+│   ├── .claude/
+│   │   └── skills/        # Spec skills (create-spec, refine-spec, blueprint)
 │   ├── AGENTS.md
 │   ├── CLAUDE.md
 │   ├── rules.md
