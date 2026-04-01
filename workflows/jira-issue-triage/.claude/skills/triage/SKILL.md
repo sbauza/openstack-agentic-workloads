@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Fetch a JIRA issue, validate against Nova source code, and classify its validity
+description: Fetch a JIRA issue, validate against Nova source code, and classify its validity. Use when triaging a JIRA issue report to determine if it is a genuine defect, configuration issue, or feature request.
 ---
 
 # Triage a JIRA Issue

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review Nova code changes for intent correctness, architectural consistency, versioning rules, and testing adequacy
+description: Review Nova code changes for intent correctness, architectural consistency, versioning rules, and testing adequacy. Use when reviewing a Gerrit patch, git diff, or set of modified files in OpenStack Nova.
 ---
 
 # Code Review

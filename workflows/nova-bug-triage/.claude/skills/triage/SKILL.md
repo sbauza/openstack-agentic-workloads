@@ -1,6 +1,6 @@
 ---
 name: triage
-description: Fetch a Nova Launchpad bug, validate against source code, and classify its validity
+description: Fetch a Nova Launchpad bug, validate against source code, and classify its validity. Use when triaging a Launchpad bug report to determine if it is a genuine defect, configuration issue, or feature request.
 ---
 
 # Triage a Nova Launchpad Bug

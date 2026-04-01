@@ -1,6 +1,6 @@
 ---
 name: update-jira
-description: Draft triage results and generate manual JIRA update instructions
+description: Draft triage results and generate manual JIRA update instructions. Use after triage to prepare status, resolution, and priority changes for a JIRA issue.
 ---
 
 # Update JIRA Issue

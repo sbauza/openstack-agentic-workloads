@@ -1,6 +1,6 @@
 ---
 name: test
-description: Run unit tests or pep8 checks against a backport branch in a containerized environment using openstack-tox-docker
+description: Run unit tests or pep8 checks against a backport branch in a containerized environment using openstack-tox-docker. Use to validate backported changes before creating a merge request.
 ---
 
 # Test

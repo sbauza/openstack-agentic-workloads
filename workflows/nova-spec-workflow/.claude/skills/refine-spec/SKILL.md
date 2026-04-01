@@ -1,6 +1,6 @@
 ---
 name: refine-spec
-description: Review and refine a generated nova-spec with structural completeness checks and architectural feedback
+description: Review and refine a generated nova-spec with structural completeness checks and architectural feedback. Use after create-spec to improve the draft with nova-core and security review.
 ---
 
 # Refine Spec

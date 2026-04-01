@@ -1,6 +1,6 @@
 ---
 name: create-mr
-description: Push the backport branch to GitLab and create a merge request after explicit user approval
+description: Push the backport branch to GitLab and create a merge request after explicit user approval. Use after completing a backport to submit the cherry-picked changes for review.
 ---
 
 # Create Merge Request

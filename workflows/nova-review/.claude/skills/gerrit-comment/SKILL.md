@@ -1,6 +1,6 @@
 ---
 name: gerrit-comment
-description: Post a review as comments on a Gerrit change using the Gerrit MCP server or REST API fallback
+description: Post a review as comments on a Gerrit change using the Gerrit MCP server or REST API fallback. Use after completing a code-review or spec-review to publish findings to Gerrit.
 ---
 
 # Gerrit Comment

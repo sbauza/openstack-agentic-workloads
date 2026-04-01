@@ -1,6 +1,6 @@
 ---
 name: update-launchpad
-description: Draft and post triage results to a Launchpad bug with user approval
+description: Draft and post triage results to a Launchpad bug with user approval. Use after triage to update the bug status, importance, and add a comment on Launchpad.
 ---
 
 # Update Launchpad Bug

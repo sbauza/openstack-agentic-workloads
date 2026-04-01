@@ -1,6 +1,6 @@
 ---
 name: reproduce
-description: Analyze a triaged bug against the Nova source checkout to assess reproducibility
+description: Analyze a triaged bug against the Nova source checkout to assess reproducibility. Use after triage to perform deeper source analysis and verify if the bug exists in current master.
 ---
 
 # Reproduce a Bug Against the Nova Source

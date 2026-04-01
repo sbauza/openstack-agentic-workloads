@@ -1,6 +1,6 @@
 ---
 name: report
-description: Generate a persistent triage report artifact from the current session analysis
+description: Generate a persistent triage report artifact from the current session analysis. Use after triage to save findings as a structured markdown report.
 ---
 
 # Generate Triage Report

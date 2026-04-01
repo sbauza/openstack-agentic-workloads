@@ -1,6 +1,6 @@
 ---
 name: spec-review
-description: Review a nova-specs proposal for architectural soundness, completeness, and alignment with Nova's design
+description: Review a nova-specs proposal for architectural soundness, completeness, and alignment with Nova's design. Use when evaluating a nova-spec RST file or Gerrit spec change.
 ---
 
 # Spec Review

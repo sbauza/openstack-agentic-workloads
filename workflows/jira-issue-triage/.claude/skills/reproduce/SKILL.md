@@ -1,6 +1,6 @@
 ---
 name: reproduce
-description: Analyze a triaged JIRA issue against the Nova source checkout to assess reproducibility
+description: Analyze a triaged JIRA issue against the Nova source checkout to assess reproducibility. Use after triage to perform deeper source analysis and verify if the issue exists in current master.
 ---
 
 # Reproduce an Issue Against the Nova Source

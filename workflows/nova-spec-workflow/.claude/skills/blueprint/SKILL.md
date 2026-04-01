@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: Generate and insert a Launchpad blueprint URL at the top of a nova-spec file
+description: Generate and insert a Launchpad blueprint URL at the top of a nova-spec file. Use after finalizing a spec to register the Launchpad blueprint.
 ---
 
 # Blueprint

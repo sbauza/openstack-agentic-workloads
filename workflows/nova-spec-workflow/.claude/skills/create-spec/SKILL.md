@@ -1,6 +1,6 @@
 ---
 name: create-spec
-description: Generate a nova-spec proposal from a JIRA RFE ticket or free-form feature description
+description: Generate a nova-spec proposal from a JIRA RFE ticket or free-form feature description. Use when a contributor wants to write a new nova-spec from an RFE or feature idea.
 ---
 
 # Create Spec
