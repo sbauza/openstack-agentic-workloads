@@ -14,6 +14,8 @@ You are reviewing OpenStack Nova code changes. Your goal is to ensure that the c
 - **@nova-core.md** — Invoke for every review to assess versioning rules, conductor boundary, API microversions, upgrade safety, and architectural fit
 - **@nova-coresec.md** — Invoke when the change touches `nova/privsep/`, `nova/policies/`, or contains patterns like `processutils.execute`, raw SQL, credential-adjacent code, or SSL/TLS operations (`ssl.SSLContext`, `load_cert_chain`, `wrap_socket`, certificate/key file handling)
 
+**Context inheritance**: When invoking subagents, always pass the workflow `rules.md` and `knowledge/nova.md` content as context. Workflow rules and project knowledge take precedence over agent persona guidance.
+
 ## Input
 
 The user will provide one of:

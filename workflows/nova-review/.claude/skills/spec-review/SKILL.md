@@ -12,6 +12,8 @@ You are reviewing an OpenStack Nova specification proposal. Your goal is to prov
 - **@nova-core.md** — Invoke for every spec review to assess architectural fit, versioning implications, upgrade safety, and conductor boundary compliance
 - **@nova-coresec.md** — Invoke when the spec proposes changes to privsep, policies, or credential handling
 
+**Context inheritance**: When invoking subagents, always pass the workflow `rules.md` and `knowledge/nova.md` content as context. Workflow rules and project knowledge take precedence over agent persona guidance.
+
 ## Input
 
 The user will provide one of:
