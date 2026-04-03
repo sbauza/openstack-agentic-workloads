@@ -12,9 +12,9 @@ Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form 
 
 ## Prerequisites
 
-- **Required**: ACP (Ambient Code Platform) session
+- **Required**: ACP session, Claude Code, or Cursor
 - **Recommended**: `openstack/nova-specs` repository added to the workspace (for template and release detection)
-- **Optional**: JIRA MCP integration configured (for automatic RFE ticket extraction; manual paste fallback available)
+- **Optional**: JIRA MCP integration configured (for automatic RFE ticket extraction; manual paste fallback available). In ACP, configure via **Workspace Settings**. For Claude Code or Cursor, see [Configuring MCP Servers](../../README.md#configuring-mcp-servers) in the main README.
 
 ## Usage
 

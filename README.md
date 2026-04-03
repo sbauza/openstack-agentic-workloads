@@ -161,6 +161,244 @@ ACP reads `.ambient/ambient.json` for the workflow configuration (`systemPrompt`
 | Knowledge | `knowledge/*.md` | auto-detected | `@../../knowledge/*.md` refs | `systemPrompt` references |
 | Project context | `AGENTS.md` | auto-detected | `CLAUDE.md` → `@AGENTS.md` | `systemPrompt` embeds |
 
+## Configuring MCP Servers
+
+Some workflows integrate with external services via MCP (Model Context Protocol) servers. Each workflow gracefully degrades when an MCP server is unavailable — see individual workflow READMEs for fallback details.
+
+| MCP Server | Used By | Purpose |
+|------------|---------|---------|
+| Atlassian (JIRA) | jira-issue-triage, nova-spec-workflow | Fetch JIRA issues, search duplicates, discover transitions |
+| Gerrit | nova-review, gerrit-to-gitlab | Fetch change metadata, post reviews, query topics |
+| GitLab | gerrit-to-gitlab | List branches, create merge requests |
+
+### Where to Put MCP Configuration
+
+| Tool | Global (personal) | Per-project (shared) |
+|------|-------------------|---------------------|
+| Claude Code | `~/.claude.json` | `.claude/settings.json` |
+| Cursor | `~/.cursor/mcp.json` | `.cursor/mcp.json` |
+| ACP | Workspace Settings UI | Integrations UI |
+
+The JSON format is the same for both Claude Code and Cursor — add entries under the `mcpServers` key. The examples below work in either tool's config file.
+
+For ACP, MCP integrations are configured through the UI: go to **Workspace Settings** (Atlassian) or **Integrations** (Gerrit, GitLab) in your ACP session.
+
+### Atlassian (JIRA)
+
+Uses [mcp-atlassian](https://github.com/sooperset/mcp-atlassian) (Python). Requires `uv` (`brew install uv` or `pip install uv`).
+
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://your-instance.atlassian.net",
+        "JIRA_USERNAME": "you@example.com",
+        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN",
+        "JIRA_SSL_VERIFY": "true",
+        "READ_ONLY_MODE": "true"
+      }
+    }
+  }
+}
+```
+
+Set `READ_ONLY_MODE` to `"true"` for triage workflows (jira-issue-triage, nova-spec-workflow) where write access is not needed. Set to `"false"` if you need write operations.
+
+For JIRA Server/Data Center, use a personal access token instead of username + API token:
+
+```json
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://jira.your-company.com",
+        "JIRA_PERSONAL_TOKEN": "YOUR_PERSONAL_ACCESS_TOKEN",
+        "JIRA_SSL_VERIFY": "true",
+        "READ_ONLY_MODE": "true"
+      }
+    }
+  }
+}
+```
+
+Generate a Cloud API token at [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
+
+Claude Code alternative — add via CLI:
+
+```bash
+claude mcp add-json "mcp-atlassian" \
+  '{"command":"uvx","args":["mcp-atlassian"],"env":{"JIRA_URL":"https://your-instance.atlassian.net","JIRA_USERNAME":"you@example.com","JIRA_API_TOKEN":"YOUR_TOKEN","JIRA_SSL_VERIFY":"true","READ_ONLY_MODE":"true"}}'
+```
+
+### Gerrit
+
+Uses the official [gerrit-mcp-server](https://github.com/GerritCodeReview/gerrit-mcp-server) (Python). Requires Python 3.11+.
+
+#### 1. Install the server
+
+```bash
+git clone https://gerrit.googlesource.com/gerrit-mcp-server /opt/gerrit-mcp-server
+cd /opt/gerrit-mcp-server
+./build-gerrit.sh
+```
+
+#### 2. Configure `gerrit_config.json`
+
+Create the config file at `gerrit_mcp_server/gerrit_config.json`:
+
+```bash
+cp gerrit_mcp_server/gerrit_config.sample.json gerrit_mcp_server/gerrit_config.json
+```
+
+Edit it with your OpenDev Gerrit credentials:
+
+```json
+{
+  "default_gerrit_base_url": "https://review.opendev.org/",
+  "gerrit_hosts": [
+    {
+      "name": "OpenDev",
+      "external_url": "https://review.opendev.org/",
+      "authentication": {
+        "type": "http_basic",
+        "username": "YOUR_GERRIT_USERNAME",
+        "auth_token": "YOUR_HTTP_PASSWORD"
+      }
+    }
+  ]
+}
+```
+
+Alternatively, use `git_cookies` authentication if you already have `~/.gitcookies` configured:
+
+```json
+{
+  "default_gerrit_base_url": "https://review.opendev.org/",
+  "gerrit_hosts": [
+    {
+      "name": "OpenDev",
+      "external_url": "https://review.opendev.org/",
+      "authentication": {
+        "type": "git_cookies",
+        "gitcookies_path": "~/.gitcookies"
+      }
+    }
+  ]
+}
+```
+
+Find your HTTP password at [https://review.opendev.org/settings/#HTTPCredentials](https://review.opendev.org/settings/#HTTPCredentials).
+
+#### 3. Add to Claude Code or Cursor
+
+The server runs in STDIO mode. Replace `/opt/gerrit-mcp-server` with your actual install path:
+
+```json
+{
+  "mcpServers": {
+    "gerrit": {
+      "command": "/opt/gerrit-mcp-server/.venv/bin/python",
+      "args": [
+        "/opt/gerrit-mcp-server/gerrit_mcp_server/main.py",
+        "stdio"
+      ],
+      "env": {
+        "PYTHONPATH": "/opt/gerrit-mcp-server/"
+      }
+    }
+  }
+}
+```
+
+For read-only access (fetching change metadata, querying topics), authentication can be omitted — OpenDev's Gerrit allows anonymous reads.
+
+### GitLab
+
+The `gerrit-to-gitlab` workflow interacts with GitLab via the `glab` CLI and git operations — no MCP server is required. This is how ACP handles GitLab integration.
+
+#### 1. Install the GitLab CLI
+
+```bash
+# macOS
+brew install glab
+
+# Linux (binary)
+curl -fsSL "https://gitlab.com/gitlab-org/cli/-/releases/v1.52.0/downloads/glab_1.52.0_linux_amd64.tar.gz" \
+  | tar -xz -C /usr/local/bin --strip-components=1 bin/glab
+```
+
+See [https://gitlab.com/gitlab-org/cli](https://gitlab.com/gitlab-org/cli) for other install methods.
+
+#### 2. Authenticate
+
+```bash
+# Option A: Personal access token (recommended)
+export GITLAB_TOKEN="YOUR_GITLAB_TOKEN"
+glab auth login --hostname gitlab.example.com --token "$GITLAB_TOKEN"
+
+# Option B: Interactive browser login
+glab auth login --hostname gitlab.example.com
+```
+
+Generate a personal access token with `api` and `write_repository` scopes at `https://gitlab.example.com/-/user_settings/personal_access_tokens`.
+
+The `GITLAB_TOKEN` environment variable is also used by the workflow's git credential helper for clone, fetch, and push operations.
+
+#### 3. Optional: GitLab MCP Server
+
+If you want MCP-based GitLab integration (for branch listing and MR creation via MCP tools instead of `glab`), two options are available:
+
+**Official GitLab MCP (GitLab 18.6+)** — OAuth-based, no tokens in config files:
+
+```bash
+# Claude Code
+claude mcp add --transport http GitLab https://gitlab.example.com/api/v4/mcp
+```
+
+```json
+// Cursor (.cursor/mcp.json)
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://gitlab.example.com/api/v4/mcp"]
+    }
+  }
+}
+```
+
+**Reference MCP server (any GitLab version)** — uses [@modelcontextprotocol/server-gitlab](https://www.npmjs.com/package/@modelcontextprotocol/server-gitlab):
+
+```json
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "YOUR_GITLAB_TOKEN",
+        "GITLAB_API_URL": "https://gitlab.example.com/api/v4"
+      }
+    }
+  }
+}
+```
+
+### Which Workflows Need Which MCP Servers
+
+| Workflow | Required MCP | Optional MCP | Without MCP |
+|----------|-------------|-------------|-------------|
+| nova-review | -- | Gerrit | REST API fallback for review posting; manual artifact for comments |
+| nova-bug-triage | -- | -- | Fully functional (uses Launchpad REST API directly) |
+| jira-issue-triage | Atlassian | -- | Cannot fetch JIRA issues without MCP |
+| nova-spec-workflow | -- | Atlassian | Manual paste of JIRA ticket content |
+| gerrit-to-gitlab | -- | Gerrit, GitLab | REST API + `glab` CLI + git for both; manual MR template if no GitLab access |
+
 ## Shared Knowledge
 
 The `knowledge/` directory contains shared project reference files that multiple workflows depend on. This avoids duplicating architecture, conventions, and design rules across workflows.

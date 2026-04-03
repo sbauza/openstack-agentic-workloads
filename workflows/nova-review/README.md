@@ -25,13 +25,13 @@ If repositories are not available, the workflow will guide you to add them or yo
 
 The workflow supports two modes for posting reviews to Gerrit:
 
-1. **With Gerrit MCP** (preferred): Full integration via MCP server configured in your ACP session integrations
+1. **With Gerrit MCP** (preferred): Full integration via the [official gerrit-mcp-server](https://github.com/GerritCodeReview/gerrit-mcp-server). In ACP, configure via **Integrations**. For Claude Code or Cursor, see [Configuring MCP Servers](../../README.md#configuring-mcp-servers) in the main README.
    - Automated review posting
    - Access to review history and patchset details
 
 2. **Without Gerrit MCP** (fallback): REST API with HTTP basic authentication
    - Prompts for Gerrit username and password when posting reviews
-   - Credentials never stored - prompted each time, cleared after use
+   - Credentials never stored — prompted each time, cleared after use
    - Falls back to manual artifact generation if authentication fails
 
 The workflow automatically detects Gerrit MCP availability at startup and adapts accordingly.

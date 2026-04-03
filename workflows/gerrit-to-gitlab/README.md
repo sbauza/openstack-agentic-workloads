@@ -17,25 +17,22 @@ An ACP workflow for backporting merged upstream OpenStack Gerrit changes to inte
 - Internal GitLab repository that is a fork or mirror of the upstream OpenStack project (sharing common git history)
 - Git credentials configured for GitLab repository access
 
-### Optional MCP Integrations
-
-The workflow supports MCP server integrations for enhanced automation, but can operate without them:
+### Optional Integrations
 
 **Gerrit MCP** (optional):
-- **With MCP**: Automated metadata fetching and change details
-- **Without MCP**: Uses Gerrit REST API for metadata, standard git for patches
-  - Automatic metadata fetch via `GET /changes/{id}/detail`
-  - User can confirm/edit fetched metadata
-  - Falls back to manual entry on API failure
 
-**GitLab MCP** (optional):
-- **With MCP**: Automated branch listing and MR creation
-- **Without MCP**: Uses git operations with HTTPS→SSH failover
-  - Repository access via git (clone, fetch, ls-remote)
-  - Prompts for SSH private key on HTTPS failure
-  - MR draft artifact generated for manual creation in GitLab UI
+- **With MCP**: Automated metadata fetching, change details, and topic queries via the [official gerrit-mcp-server](https://github.com/GerritCodeReview/gerrit-mcp-server)
+- **Without MCP**: Uses Gerrit REST API for metadata, standard git for patches. Falls back to manual entry on API failure.
+- See [Configuring MCP Servers](../../README.md#configuring-mcp-servers) in the main README for setup instructions.
 
-The workflow automatically detects MCP availability at startup and uses the appropriate method.
+**GitLab** (`glab` CLI + `GITLAB_TOKEN`):
+
+- The workflow uses the `glab` CLI and git operations for GitLab access — no MCP server is required
+- Set `GITLAB_TOKEN` in your environment and authenticate with `glab auth login`
+- If `glab` is unavailable, falls back to git HTTPS→SSH failover and generates MR draft artifacts for manual creation in the GitLab UI
+- See [Configuring MCP Servers — GitLab](../../README.md#gitlab) in the main README for full setup instructions.
+
+The workflow automatically detects integration availability at startup and uses the appropriate method.
 
 ## Usage
 
@@ -132,36 +129,21 @@ When Gerrit MCP is unavailable, the `/backport` skill uses REST API for metadata
    - Example: `git fetch https://review.opendev.org/openstack/nova refs/changes/45/912345/3`
    - No authentication required for merged public changes
 
-### GitLab Git Fallback
+### GitLab Fallback
 
-When GitLab MCP is unavailable, git operations use HTTPS→SSH failover:
+When `glab` CLI or GitLab MCP is unavailable, the workflow falls back to git operations with HTTPS→SSH failover:
 
 1. **HTTPS First**:
-   - Attempts git operation (clone, fetch, ls-remote) via HTTPS
-   - Uses configured git credential helper
+   - Attempts git operation (clone, fetch, ls-remote) via HTTPS using `GITLAB_TOKEN`
    - If succeeds, workflow continues normally
 
 2. **SSH Failover on HTTPS Failure**:
-   - Notifies user of HTTPS failure
    - Prompts for SSH private key path
-   - Validates key file exists and is readable
-   - Warns if key permissions are too permissive (not 600/400)
-   - Converts HTTPS URL to SSH format
    - Retries operation with `GIT_SSH_COMMAND="ssh -i <key> -o StrictHostKeyChecking=no"`
 
 3. **MR Draft Artifact**:
-   - If GitLab MCP unavailable for MR creation
-   - Generates Markdown artifact with:
-     - Git push command (exact branch and remote)
-     - MR title and description (ready to copy-paste)
-     - Source and target branch information
-     - Manual steps for creating MR in GitLab UI
+   - If MR creation is not possible (no `glab`, no GitLab MCP), generates a Markdown artifact with git push command, MR title/description, and manual creation steps
    - Saved to `artifacts/gerrit-to-gitlab/mr-template-{feature}.md`
-
-4. **Error Reporting**:
-   - Both HTTPS and SSH failed: Shows both error messages
-   - Provides remediation steps for each failure type
-   - Suggests checking credentials, network, SSH key registration
 
 ## Artifact Outputs
 
