@@ -51,12 +51,12 @@ If Gerrit MCP is unavailable:
    - No authentication required for merged public changes
    - On failure → reports detailed error with remediation steps
 
-### GitLab MCP Fallback
+### GitLab Access
 
-If GitLab MCP is unavailable:
+GitLab operations use the `glab` CLI and git with `GITLAB_TOKEN`. No GitLab MCP server is required.
 
 1. **Repository Access** (`/backport` skill):
-   - Attempts HTTPS git operations (clone, fetch, ls-remote) first
+   - Uses HTTPS git operations (clone, fetch, push) with `GITLAB_TOKEN` for authentication
    - On HTTPS failure → automatically fails over to SSH
    - Prompts user for dedicated SSH private key path
    - Validates key file exists and is readable
@@ -64,7 +64,8 @@ If GitLab MCP is unavailable:
    - On both HTTPS and SSH failure → reports detailed errors with remediation
 
 2. **MR Creation** (`/create-mr` skill):
-   - Generates MR draft artifact in Markdown format
+   - Uses `glab mr create` to create merge requests programmatically
+   - If `glab` is unavailable, generates MR draft artifact in Markdown format
    - Includes: git push command, MR title, description, source/target branches
    - Provides manual MR creation instructions for GitLab UI
    - Saved to `artifacts/gerrit-to-gitlab/mr-template-{feature}.md`

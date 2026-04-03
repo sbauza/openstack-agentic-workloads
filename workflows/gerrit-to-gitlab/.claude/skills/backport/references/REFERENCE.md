@@ -245,11 +245,13 @@ Ask the user for the backport target:
 1. **GitLab project path**: "Which internal GitLab project should receive this backport? (e.g., `internal/nova`)"
 2. **Stable branch name**: "Which stable branch should the change be applied to? (e.g., `stable/2024.2`)"
 
-**Check for GitLab MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gitlab` and parse the JSON output.
+**Validate branch existence** using git:
 
-- **If GitLab MCP is available**: Validate the stable branch exists using the GitLab MCP server to list branches. If the branch does not exist, list available branches that match `stable/*` and ask the user to select one or provide a different branch name.
+```bash
+git ls-remote --heads origin 'refs/heads/stable/*'
+```
 
-- **If GitLab MCP is unavailable**: Skip branch validation. Inform the user: "GitLab MCP unavailable — branch existence will be verified during git operations."
+If the branch does not exist, list available branches that match `stable/*` and ask the user to select one or provide a different branch name. If `git ls-remote` fails (e.g., no remote configured yet), skip validation — branch existence will be verified during clone/fetch operations.
 
 ## Step 6: Prompt for Metadata
 
@@ -262,25 +264,7 @@ Ask the user for commit message metadata:
 
 ### 7.1. Clone or Fetch Internal Repository
 
-**Check for GitLab MCP availability** (from step 5b check).
-
-**If GitLab MCP is available**:
-
-Clone or fetch the internal GitLab repository if not already available locally:
-
-```bash
-git clone <gitlab-repo-url> /workspace/repos/<project-name>
-```
-
-Or if already cloned, fetch the latest:
-
-```bash
-git fetch origin
-```
-
-**If GitLab MCP is unavailable**:
-
-Attempt HTTPS git operations first. If they fail, use the SSH failover helper:
+Clone or fetch the internal GitLab repository. Use HTTPS with `GITLAB_TOKEN` as the primary method, with SSH failover:
 
 1. **Try HTTPS clone/fetch**:
 
@@ -288,7 +272,7 @@ Attempt HTTPS git operations first. If they fail, use the SSH failover helper:
    git clone https://gitlab.example.com/<project-path>.git /workspace/repos/<project-name>
    ```
 
-   Or:
+   Or if already cloned, fetch the latest:
 
    ```bash
    git fetch origin

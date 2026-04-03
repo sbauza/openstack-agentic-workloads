@@ -137,23 +137,29 @@ If the push fails:
 
 ### 7. Create Merge Request
 
-**Check for GitLab MCP availability**: Run `workflows/shared/scripts/detect-mcp.sh gitlab` and parse the JSON output to check the `available` field.
+**Check for `glab` CLI availability**:
 
-#### 7a. If GitLab MCP is Available
+```bash
+which glab && glab auth status
+```
 
-Use the GitLab MCP server to create the merge request with:
+#### 7a. If `glab` CLI is Available
 
-- `source_branch`: The backport branch name
-- `target_branch`: The stable branch
-- `title`: The MR title (single-commit subject or multi-commit summary)
-- `description`: The composed MR description from step 3 (backported commits table + traceability table)
-- `project_path`: The internal GitLab project path
+Use the `glab` CLI to create the merge request:
+
+```bash
+glab mr create \
+  --source-branch <source_branch> \
+  --target-branch <target_branch> \
+  --title "<mr_title>" \
+  --description "<mr_description>"
+```
 
 On success, proceed to step 8 (success reporting).
 
 On failure, proceed to step 7b (manual MR template generation).
 
-#### 7b. If GitLab MCP is Unavailable
+#### 7b. If `glab` CLI is Unavailable or MR Creation Fails
 
 Generate a manual MR template and provide creation instructions:
 
@@ -190,18 +196,18 @@ Write `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md`:
 
 ## Git Push Command (if not already pushed)
 
-```bash
+\`\`\`bash
 git push origin {source_branch}
-```
+\`\`\`
 ```
 
-Inform the user: "GitLab MCP is unavailable. An MR template has been saved to `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md` with manual creation instructions."
+Inform the user: "\`glab\` CLI is unavailable. An MR template has been saved to \`artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md\` with manual creation instructions."
 
 Proceed to step 8 (report result with manual instructions).
 
 ### 8. Report Result
 
-#### 8a. On Success (GitLab MCP)
+#### 8a. On Success (`glab` CLI)
 
 Report the MR URL and status:
 
@@ -215,12 +221,12 @@ Merge request created successfully!
 **Commits**: {N}
 ```
 
-#### 8b. On Manual Template Generation (GitLab MCP Unavailable)
+#### 8b. On Manual Template Generation (`glab` Unavailable)
 
 Report the template location and provide guidance:
 
 ```text
-GitLab MCP unavailable — MR template generated.
+`glab` CLI unavailable — MR template generated.
 
 **Template**: artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md
 **Source**: {source_branch} -> {target_branch}
@@ -235,7 +241,7 @@ The template contains:
 Open the template file to view the full instructions.
 ```
 
-#### 8c. On Failure (GitLab MCP Error)
+#### 8c. On Failure (`glab` Error)
 
 Report the error and save the MR draft for manual creation:
 
@@ -276,15 +282,15 @@ Inform the user: "Failed to create the merge request. The MR draft has been save
 |-----------|----------|
 | No backport artifact found | Tell user to run `/backport` first |
 | Unresolved conflicts in backport | Tell user to resolve conflicts before creating MR |
-| GitLab MCP unavailable | Generate manual MR template with creation instructions |
+| `glab` CLI unavailable | Generate manual MR template with creation instructions |
 | Push fails (auth/permissions) | Report error, save draft, suggest checking credentials |
-| MR creation fails (GitLab MCP error) | Save draft to artifact with error details |
+| MR creation fails (`glab` error) | Save draft to artifact with error details |
 | User declines approval | Do not proceed; inform user they can re-run when ready |
 
 ## Output
 
-- **On success (GitLab MCP)**: No artifact file needed — MR is on GitLab. Report MR URL.
-- **On GitLab MCP unavailable**: `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md`
+- **On success (`glab` CLI)**: No artifact file needed — MR is on GitLab. Report MR URL.
+- **On `glab` unavailable**: `artifacts/gerrit-to-gitlab/mr-template-{branch_identifier}.md`
 - **On failure**: `artifacts/gerrit-to-gitlab/mr-draft-{branch_identifier}.md`
 
 ### Writing Style
@@ -294,4 +300,4 @@ Follow the rules in `rules.md`. In particular:
 - The MR preview must show exactly what will be created — no surprises
 - Error messages must include actionable next steps
 - Never attempt to create the MR if the push failed
-- Distinguish between "GitLab MCP unavailable" (expected, use manual template) and "MR creation failed" (unexpected error)
+- Distinguish between "`glab` unavailable" (expected, use manual template) and "MR creation failed" (unexpected error)

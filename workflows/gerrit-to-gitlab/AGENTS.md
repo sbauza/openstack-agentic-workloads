@@ -44,14 +44,13 @@ Used for all upstream Gerrit interactions (read-only):
 **Gerrit instance**: `review.opendev.org`
 **Change URL format**: `https://review.opendev.org/c/{project}/+/{change_id}`
 
-### GitLab MCP Server
+### GitLab Access
 
-Used for GitLab API operations:
+GitLab operations use the `glab` CLI and git with `GITLAB_TOKEN`:
 
-- **List branches**: validate that the user-specified stable branch exists
-- **Create merge request**: submit the backported change as an MR with traceability metadata
-
-Local git operations (clone, checkout, cherry-pick, push) use the **git CLI**, not the GitLab MCP server.
+- **Repository access**: git clone/fetch/push via HTTPS (with `GITLAB_TOKEN`) or SSH failover
+- **Branch validation**: `git ls-remote` to verify stable branch existence
+- **Create merge request**: `glab mr create` (falls back to manual MR template if `glab` is unavailable)
 
 ## Git CLI Usage
 

@@ -44,7 +44,7 @@ Verify the change status is `MERGED`. Do not proceed with non-merged changes.
 
 ### 5. Prompt for Target
 
-Check for existing backport branches (`backport/*`). If found, offer to add commits to an existing branch or create a new one. For new branches, ask for GitLab project path and stable branch name. Validate branch exists via GitLab MCP if available.
+Check for existing backport branches (`backport/*`). If found, offer to add commits to an existing branch or create a new one. For new branches, ask for GitLab project path and stable branch name. Validate branch exists via `git ls-remote` or `glab` CLI if available.
 
 ### 6. Prompt for Metadata
 
@@ -100,11 +100,11 @@ Offer to create the MR via `/create-mr` or add more commits via another `/backpo
 | Change not found | Report: "Could not find Gerrit change {id}. Please verify the URL or ID." |
 | Change not MERGED | Report: "This change has status '{status}'. Only merged changes can be backported." |
 | Gerrit MCP unavailable | Fall back to REST API metadata fetch, then git refspec fetch |
-| GitLab MCP unavailable | Fall back to HTTPS/SSH git operations |
+| `glab` CLI unavailable | Fall back to HTTPS/SSH git operations |
 | REST API metadata fetch fails | Fall back to manual metadata entry |
 | Git fetch fails (both methods) | Report error with remediation steps |
 | SSH key invalid | Report error, allow retry or cancellation |
-| Stable branch not found | List available branches (if GitLab MCP available) or skip validation |
+| Stable branch not found | List available branches via `git ls-remote` or skip validation |
 | Cherry-pick fails (not conflict) | Report the git error and suggest manual intervention |
 
 ## Output
