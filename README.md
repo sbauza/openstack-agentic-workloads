@@ -2,6 +2,30 @@
 
 Workflow repository for OpenStack services, usable with **Cursor**, **Claude Code**, and the **Ambient Code Platform** (ACP).
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Available Workflows](#available-workflows)
+- [Quickstart](#quickstart)
+  - [Invoking Skills](#invoking-skills)
+  - [All Available Skills](#all-available-skills)
+  - [Using Agent Personas](#using-agent-personas)
+  - [Persona Reference](#persona-reference)
+- [Using Workflows](#using-workflows)
+  - [Cursor](#cursor)
+  - [Claude Code](#claude-code)
+  - [Ambient Code Platform (ACP)](#ambient-code-platform-acp)
+  - [How Discovery Works Across Tools](#how-discovery-works-across-tools)
+- [Configuring MCP Servers](#configuring-mcp-servers)
+  - [Atlassian (JIRA)](#atlassian-jira)
+  - [Gerrit](#gerrit)
+  - [GitLab](#gitlab)
+- [Shared Knowledge](#shared-knowledge)
+- [Agent Personas](#agent-personas)
+- [Repository Structure](#repository-structure)
+- [Design Principles](#design-principles)
+- [Contributing](#contributing)
+
 ## Overview
 
 This repository contains workflow definitions tailored for OpenStack development. Each workflow provides structured processes — skills, rules, and project-specific knowledge — that guide AI agents through complex OpenStack tasks like code review, spec authoring, bug triage, backporting, and Gerrit interaction.
@@ -478,8 +502,83 @@ Every workflow must have:
 
 ## Contributing
 
-1. Fork this repository
-2. Create a new workflow directory under `workflows/`
-3. Add `.ambient/ambient.json` with the required fields
-4. Test using the "Custom Workflow" feature in ACP
-5. Submit a pull request
+### Adding a New Workflow
+
+1. **Create the workflow directory** under `workflows/{service}-{purpose}/` (e.g., `workflows/neutron-review/`)
+
+2. **Add the required config** at `.ambient/ambient.json`:
+
+   ```json
+   {
+     "name": "Workflow Name",
+     "description": "Brief description of what the workflow does.",
+     "systemPrompt": "You are a ...\n\n## Skills\n- /skill-name — ...\n\n## Output\nartifacts/{workflow-name}/",
+     "startupPrompt": "Welcome! Use /skill-name to start."
+   }
+   ```
+
+   The `systemPrompt` should include a role definition, list of available skills, workflow phases, output locations, and a workspace navigation block. See `AGENTS.md` for full guidelines on writing effective system prompts.
+
+3. **Add skills** in `.claude/skills/{skill-name}/SKILL.md`. Each skill needs YAML frontmatter (`name`, `description`) and a structured body with Process, Output, and Writing Style sections.
+
+4. **Add Cursor symlinks** so Cursor discovers your skills. Use a workflow prefix to avoid name collisions:
+
+   ```bash
+   # Pick a short prefix (e.g., "neutron" for neutron-review)
+   ln -s ../../workflows/neutron-review/.claude/skills/my-skill .agents/skills/neutron-my-skill
+   ```
+
+   See the prefix table in `AGENTS.md` for existing prefixes.
+
+5. **Add project context files**:
+   - `AGENTS.md` — model-agnostic project reference (architecture, conventions, key paths). Reference shared knowledge with `@../../knowledge/nova.md` rather than duplicating it.
+   - `CLAUDE.md` — a thin pointer: `@AGENTS.md` and `@rules.md`
+   - `rules.md` — behavioral rules specific to this workflow
+
+6. **Add a `README.md`** documenting the workflow's purpose, prerequisites, available skills, and usage instructions for ACP, Claude Code, and Cursor.
+
+7. **Reference agent personas** if your workflow benefits from subagent expertise. Use `@../../agents/{persona}.md` in skill files to invoke shared personas (e.g., `@../../agents/nova-core.md` for architectural review). If you need a workflow-specific persona, create it in `.claude/agents/` within your workflow directory.
+
+8. **Test the workflow** before merging. You can use any of the three supported tools:
+
+   **ACP** — load your branch via Custom Workflow:
+   - Push your branch to GitHub
+   - In ACP, select **Custom Workflow...**
+   - Enter the repo URL, your branch name, and the workflow path (e.g., `workflows/neutron-review`)
+   - Run each skill end-to-end
+
+   **Claude Code** — run directly from your local checkout:
+
+   ```bash
+   cd workflows/neutron-review
+   claude
+   # Then invoke skills: /my-skill
+   ```
+
+   **Cursor** — open the repo root in Cursor. Skills are available immediately via `.agents/skills/` symlinks. Type `/` in the agent chat and look for your prefixed skill name (e.g., `/neutron-my-skill`).
+
+### Modifying an Existing Workflow
+
+1. **Read first** — understand the current `ambient.json`, skills, and `AGENTS.md` before changing anything
+2. **Scope your changes** — each workflow is independent. Do not propagate changes to other workflows unless explicitly asked
+3. **Preserve existing skills** — do not remove or rename skills without explicit instruction, as users may depend on them
+4. **Keep paths consistent** — if you change artifact output paths, update both the `systemPrompt` and the `results` field in `ambient.json`
+5. **Update Cursor symlinks** — if you add or rename a skill, update the corresponding symlink in `.agents/skills/`
+
+### Adding a New Agent Persona
+
+1. Create the persona file in `agents/{persona-name}.md` with YAML frontmatter (`name`, `description`, `tools`) and a structured body defining personality, domain knowledge, and key behaviors
+2. Reference the persona from workflow skills using `@../../agents/{persona-name}.md`
+3. Update the persona tables in `AGENTS.md` and this README
+
+### Checklist
+
+Before submitting a pull request:
+
+- [ ] `.ambient/ambient.json` is valid JSON with all 4 required fields
+- [ ] `systemPrompt` includes a workspace navigation block and lists all skills
+- [ ] Skills have YAML frontmatter and do not duplicate deterministic checks (linters, CI)
+- [ ] Human approval is required before any external action (Gerrit posts, JIRA updates, etc.)
+- [ ] Cursor symlinks exist in `.agents/skills/` with the correct workflow prefix
+- [ ] `README.md` documents purpose, prerequisites, skills, and usage for ACP/Claude Code/Cursor
+- [ ] All markdown follows linting standards (blank lines around headings, lists, and code blocks)
