@@ -515,11 +515,23 @@ Every workflow must have:
 
 7. **Reference agent personas** if your workflow benefits from subagent expertise. Use `@../../agents/{persona}.md` in skill files to invoke shared personas (e.g., `@../../agents/nova-core.md` for architectural review). If you need a workflow-specific persona, create it in `.claude/agents/` within your workflow directory.
 
-8. **Test the workflow** using ACP's Custom Workflow feature before merging:
+8. **Test the workflow** before merging. You can use any of the three supported tools:
+
+   **ACP** — load your branch via Custom Workflow:
    - Push your branch to GitHub
    - In ACP, select **Custom Workflow...**
    - Enter the repo URL, your branch name, and the workflow path (e.g., `workflows/neutron-review`)
    - Run each skill end-to-end
+
+   **Claude Code** — run directly from your local checkout:
+
+   ```bash
+   cd workflows/neutron-review
+   claude
+   # Then invoke skills: /my-skill
+   ```
+
+   **Cursor** — open the repo root in Cursor. Skills are available immediately via `.agents/skills/` symlinks. Type `/` in the agent chat and look for your prefixed skill name (e.g., `/neutron-my-skill`).
 
 ### Modifying an Existing Workflow
 
