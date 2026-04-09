@@ -15,7 +15,7 @@ This workflow helps Nova bug triagers quickly classify JIRA issues against the N
 
 ## Prerequisites
 
-- **Atlassian MCP integration** (required for JIRA access): In ACP, configure via **Workspace Settings**. For Claude Code or Cursor, configure the `mcp-atlassian` server — see [Configuring MCP Servers](../../README.md#configuring-mcp-servers) in the main README. The workflow checks MCP availability at startup and reports the status.
+- **Atlassian MCP integration** (required for JIRA access): In ACP, configure via **Workspace Settings**. For Claude Code or Cursor, see [Configuring MCP Servers](../../README.md#atlassian-jira) in the main README. The workflow checks MCP availability at startup and reports the status.
 - **Nova source checkout** (auto-managed): The workflow automatically clones the Nova repository to `/workspace/repos/nova/` from `https://opendev.org/openstack/nova.git` if not already present. No manual setup needed.
 
 ## Usage

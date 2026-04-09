@@ -209,7 +209,31 @@ For ACP, MCP integrations are configured through the UI: go to **Workspace Setti
 
 ### Atlassian (JIRA)
 
-Uses [mcp-atlassian](https://github.com/sooperset/mcp-atlassian) (Python). Requires `uv` (`brew install uv` or `pip install uv`).
+Uses the [official Atlassian MCP server](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/setting-up-ides/) — OAuth-based, no tokens in config files.
+
+**Cursor** — add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "Atlassian-MCP-Server": {
+      "url": "https://mcp.atlassian.com/v1/mcp"
+    }
+  }
+}
+```
+
+**Claude Code** — add via CLI:
+
+```bash
+claude mcp add --transport http Atlassian-MCP-Server https://mcp.atlassian.com/v1/mcp
+```
+
+On first use, your browser will open for OAuth authentication with your Atlassian account. See the [Atlassian MCP setup guide](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/setting-up-ides/) for details.
+
+#### Alternative: mcp-atlassian (community)
+
+If you cannot use the official server (e.g., JIRA Server/Data Center, or need `READ_ONLY_MODE` control), use [mcp-atlassian](https://github.com/sooperset/mcp-atlassian) (Python). Requires `uv` (`brew install uv` or `pip install uv`).
 
 ```json
 {
@@ -229,35 +253,9 @@ Uses [mcp-atlassian](https://github.com/sooperset/mcp-atlassian) (Python). Requi
 }
 ```
 
-Set `READ_ONLY_MODE` to `"true"` for triage workflows (jira-issue-triage, nova-spec-workflow) where write access is not needed. Set to `"false"` if you need write operations.
-
-For JIRA Server/Data Center, use a personal access token instead of username + API token:
-
-```json
-{
-  "mcpServers": {
-    "mcp-atlassian": {
-      "command": "uvx",
-      "args": ["mcp-atlassian"],
-      "env": {
-        "JIRA_URL": "https://jira.your-company.com",
-        "JIRA_PERSONAL_TOKEN": "YOUR_PERSONAL_ACCESS_TOKEN",
-        "JIRA_SSL_VERIFY": "true",
-        "READ_ONLY_MODE": "true"
-      }
-    }
-  }
-}
-```
+Set `READ_ONLY_MODE` to `"true"` for triage workflows where write access is not needed.
 
 Generate a Cloud API token at [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
-
-Claude Code alternative — add via CLI:
-
-```bash
-claude mcp add-json "mcp-atlassian" \
-  '{"command":"uvx","args":["mcp-atlassian"],"env":{"JIRA_URL":"https://your-instance.atlassian.net","JIRA_USERNAME":"you@example.com","JIRA_API_TOKEN":"YOUR_TOKEN","JIRA_SSL_VERIFY":"true","READ_ONLY_MODE":"true"}}'
-```
 
 ### Gerrit
 
