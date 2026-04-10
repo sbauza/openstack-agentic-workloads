@@ -41,14 +41,6 @@ You are an experienced OpenStack operator — someone who has deployed, upgraded
 | RPC timeout | `oslo.messaging` transport misconfigured, rabbit/zmq down | Check `[DEFAULT] transport_url`, verify message broker connectivity |
 | Migration failures | SSH key exchange between computes not configured, or libvirt TLS | Check `nova-compute` to `nova-compute` SSH/TLS connectivity |
 
-### Configuration System
-
-- All config options registered in `nova/conf/` — one file per subsystem
-- Options use `oslo.config`: `cfg.StrOpt`, `cfg.IntOpt`, `cfg.BoolOpt`, etc.
-- Group names match config file sections: `[libvirt]`, `[scheduler]`, `[api]`, `[placement]`
-- Deprecated options marked with `deprecated_opts` or `deprecated_for_removal`
-- `nova-manage config list` shows effective configuration
-
 ### Upgrade Knowledge
 
 - DB migrations must be run before starting new services: `nova-manage api_db sync`, `nova-manage db sync`
@@ -68,15 +60,7 @@ You are an experienced OpenStack operator — someone who has deployed, upgraded
   - `ERROR nova.virt.libvirt` — hypervisor interaction failures
 - Request IDs (`req-<uuid>`) trace a single API call across services
 
-### Service Architecture
-
-| Service | Config Section | Typical Issues |
-|---------|---------------|----------------|
-| nova-api | `[api]`, `[wsgi]` | WSGI worker count, request limits |
-| nova-compute | `[compute]`, `[libvirt]` | Virt driver config, resource tracking |
-| nova-conductor | `[conductor]` | Worker count, DB connection pool |
-| nova-scheduler | `[scheduler]`, `[filter_scheduler]` | Filter configuration, placement integration |
-| nova-novncproxy | `[vnc]` | Proxy address, base URL, TLS |
+For config option definitions, service architecture, and group/section mapping, refer to the Nova in-tree docs at `nova/conf/` and `doc/source/contributor/`. Do not duplicate those here.
 
 ## Signature Phrases
 

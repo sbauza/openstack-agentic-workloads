@@ -35,35 +35,23 @@ If the invoking skill passes these contexts, treat them as top-level instruction
 
 ## Domain Knowledge
 
-### Versioning Rules (Hard Blockers)
+For versioning rules (RPC, objects, DB schema, microversions), API conventions, REST patterns, and upgrade safety, refer to the Nova in-tree docs — these are the source of truth:
 
-- **RPC methods**: Any modification requires a version bump; new arguments must be optional with backward-compatible defaults
-- **Objects**: Attribute or method changes require version increments; wireline stability is required for live upgrades (`oslo.versionedobjects`)
-- **Database schema**: Changes must be additive-only — no column removals or type alterations; migrations must work online (no downtime)
-- **API microversions**: Behavior changes require a new microversion with simultaneous client and Tempest updates
+- `doc/source/contributor/code-review.rst` — versioning rules, upgrade concerns, API conventions
+- `HACKING.rst` — N-code checks, import rules, test patterns
+- `nova/api/openstack/rest_api_version_history.rst` — microversion history
 
-### Architecture
+**Do not re-check what these docs already cover via CI** (`tox -e pep8` enforces N-codes and style). Focus on the judgement calls below.
 
-- Multi-cell (Cells v2): API cell with super conductor, per-cell conductors and computes
-- Conductor orchestration: long-running workflows (live migration, resize, evacuate) go through conductor
-- Placement integration: resource claims via `SchedulerReportClient`, provider trees
-- Oslo libraries: `oslo.messaging` (RPC), `oslo.versionedobjects`, `oslo.policy` (RBAC), `oslo.db`
+### Review Judgement Calls
 
-### API Layer
+These are patterns that CI cannot enforce — reviewers must watch for them:
 
-- **Microversion system**: Each behavior change requires a new microversion; version history in `nova/api/openstack/rest_api_version_history.rst`; new microversions need API code + python-novaclient + Tempest + reno simultaneously
-- **REST conventions**: hyphens in URLs (`/os-server-groups`), snake_case in bodies; "server" not "instance", "project" not "tenant"; response codes: 200 GET/PUT, 201 sync POST, 202 async POST, 204 DELETE
-- **Policy layer**: every API action needs a policy rule in `nova/policies/`; least privilege defaults; scope types (`system`, `project`) must be appropriate
-- **Schema validation**: request schemas in `nova/api/openstack/compute/schemas/`; schemas must validate required fields and reject unknowns; schema changes tied to specific microversions
-
-### Upgrade Safety
-
-- **Rolling upgrades**: Nova supports N-1 to N rolling upgrades; conductor must be upgraded first, then computes
-- **RPC version pinning**: mixed-version deployments require `[upgrade_levels]` configuration to pin RPC versions to the oldest running service
-- **Online data migrations**: schema changes that need data backfill must use `nova-manage db online_data_migrations`, never block service startup
-- **Config deprecations**: removed or renamed options must go through a deprecation cycle (`deprecated_opts`, `deprecated_for_removal`) — removing an option without deprecation breaks existing deployments
-- **Object version compatibility**: `obj_make_compatible()` must correctly downgrade objects for older services during rolling upgrades
-- **Release notes**: upgrade-impacting changes require `reno` release notes with clear operator instructions
+- **Versioning violations are blockers, not suggestions** — flag any RPC, object, DB schema, or microversion rule violation as a hard blocker
+- **Conductor boundary** — `nova-compute` and virt drivers must never import from `nova/db/` directly (N307 catches some of this, but not all architectural violations)
+- **Upgrade safety** — assess rolling upgrade impact: does `obj_make_compatible()` handle downgrades? Are new RPC arguments optional? Does this need `[upgrade_levels]` pinning?
+- **API changes need the full set** — a microversion requires simultaneous API code + python-novaclient + Tempest + reno
+- **Architectural fit** — a locally correct solution that creates architectural debt is not acceptable
 
 ### Test Quality Assessment
 
