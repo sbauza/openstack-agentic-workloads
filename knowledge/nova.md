@@ -11,43 +11,9 @@ Nova is OpenStack's compute service for provisioning and managing virtual machin
 - **Contributor guide**: `doc/source/contributor/` in the Nova repo
 - **Specs**: `openstack/nova-specs` — `specs/<release>/approved/`, `specs/<release>/implemented/`, `specs/backlog/`, `specs/abandoned/`
 
-## Directory Structure
+For directory structure, core services, virt drivers, oslo libraries, configuration patterns, and test commands, refer to the Nova repository's in-tree documentation at `doc/source/contributor/`. Do not duplicate that information here — read it directly from the source.
 
-```text
-nova/
-├── api/           # REST API endpoints and WSGI apps
-├── compute/       # Compute service core (ComputeManager)
-├── conductor/     # Conductor service (DB proxy, orchestration)
-├── scheduler/     # VM scheduling logic
-├── virt/          # Virtualization drivers (libvirt, vmwareapi, ironic, zvm)
-├── network/       # Neutron integration
-├── storage/       # Storage backends
-├── db/            # Database layer and migrations
-├── objects/       # Versioned data objects
-├── cmd/           # CLI entry points
-├── conf/          # All configuration option definitions
-├── policies/      # Policy registration
-├── pci/           # PCI passthrough support
-├── console/       # Console access
-├── image/         # Glance integration
-├── notifications/ # Event notifications
-├── privsep/       # Privileged operations
-├── hacking/       # Custom flake8 lint checks (N-codes)
-├── tests/
-│   ├── unit/
-│   └── functional/
-```
-
-## Core Services
-
-| Service | Manager | Role |
-|---------|---------|------|
-| nova-compute | `nova/compute/manager.py` — `ComputeManager` | VM lifecycle on hypervisor nodes; never accesses DB directly |
-| nova-scheduler | `nova/scheduler/manager.py` — `SchedulerManager` | Host selection for placement |
-| nova-conductor | `nova/conductor/manager.py` — `ConductorManager` | DB proxy, orchestration for long-running workflows |
-| nova-api | WSGI | REST API frontend, policy/quota enforcement |
-
-### Multi-Cell Architecture (Cells v2)
+## Multi-Cell Architecture (Cells v2)
 
 ```text
                     API cell
@@ -88,15 +54,6 @@ These are patterns that CI cannot fully enforce — reviewers must watch for the
 - URLs use hyphens; request bodies use snake_case
 - 201 for synchronous creation, 202 for async
 
-## Virt Drivers
-
-| Driver | Directory | Use Case |
-|--------|-----------|----------|
-| libvirt | `nova/virt/libvirt/` | KVM, QEMU, Xen, LXC (primary) |
-| VMware | `nova/virt/vmwareapi/` | vSphere integration |
-| Ironic | `nova/virt/ironic/` | Bare-metal provisioning |
-| z/VM | `nova/virt/zvm/` | IBM z/VM mainframes |
-
 ## Internal Service TLS
 
 Nova services communicate over internal channels that operators can secure with TLS:
@@ -108,57 +65,6 @@ Nova services communicate over internal channels that operators can secure with 
 - **Glance/Cinder/Neutron** — connections to other OpenStack services use keystoneauth sessions over HTTPS; CA bundles configured via `[keystone_authtoken]` and per-service `cafile` options
 
 **Reviewer note — security hardening vs code bugs**: TLS configuration in Nova is **operator responsibility**. Code paths that require TLS certificates can assume they are configured when the feature is enabled. A missing certificate when the operator has enabled a TLS feature is a deployment misconfiguration, not a code bug. Reviewers should not suggest guards that silently skip TLS operations when config values are absent — failing loudly on misconfiguration is preferable to silently degrading security. See also the "CVE vs Security Hardening" distinction in `@nova-coresec.md`.
-
-## Key External Dependencies
-
-| Service | Purpose | Integration Point |
-|---------|---------|-------------------|
-| Keystone | Identity/Auth | `keystoneauth1` |
-| Placement | Resource inventory & claims | `SchedulerReportClient` |
-| Neutron | Networking | `nova/network/neutron.py` |
-| Glance | VM images | `nova/image/glance.py` |
-| Cinder | Block storage | `nova/volume/` |
-| Manila | Shared filesystems | `nova/share/` |
-| Cyborg | Accelerators | `nova/accelerator/cyborg.py` |
-
-## Oslo Libraries
-
-| Library | Purpose |
-|---------|---------|
-| `oslo.messaging` | RPC and notification transport |
-| `oslo.service` | Daemon lifecycle, periodic tasks |
-| `oslo.config` | Configuration file parsing |
-| `oslo.db` | Database session management, migrations |
-| `oslo.policy` | RBAC policy enforcement |
-| `oslo.versionedobjects` | Serializable objects with schema versioning |
-| `oslo.concurrency` | File locking, process management |
-| `oslo.privsep` | Privilege separation |
-
-## Configuration Option Patterns
-
-Nova config options are registered in `nova/conf/`:
-
-- Each file registers options for a specific subsystem (e.g., `nova/conf/libvirt.py`, `nova/conf/scheduler.py`)
-- Options use `oslo.config` patterns: `cfg.StrOpt`, `cfg.IntOpt`, `cfg.BoolOpt`, etc.
-- Deprecated options are marked with `deprecated_opts` or `deprecated_for_removal`
-- Group names match config file sections (e.g., `[libvirt]`, `[scheduler]`, `[api]`)
-
-## Running Tests
-
-```bash
-# Unit tests
-tox -e py3
-tox -e py3 -- nova/tests/unit/path/to/test_file.py
-
-# Functional tests
-tox -e functional
-
-# Lint
-tox -e pre-commit
-
-# Type checking
-tox -e mypy
-```
 
 ## Operations Requiring Human Review
 
