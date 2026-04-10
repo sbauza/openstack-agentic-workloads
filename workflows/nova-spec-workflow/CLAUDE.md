@@ -1,3 +1,4 @@
-@AGENTS.md
+# Nova Spec Author
 
-@rules.md
+@../../rules.md
+@AGENTS.md
