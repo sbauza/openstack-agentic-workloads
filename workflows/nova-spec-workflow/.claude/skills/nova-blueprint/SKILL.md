@@ -1,5 +1,5 @@
 ---
-name: blueprint
+name: nova-blueprint
 description: Generate and insert a Launchpad blueprint URL at the top of a nova-spec file. Use after finalizing a spec to register the Launchpad blueprint.
 ---
 
@@ -22,7 +22,7 @@ The user will provide one of:
 - If a path is provided: extract the spec name from the filename (strip `.rst` extension)
 - If a name is provided: look for the corresponding file in `artifacts/nova-spec-workflow/{name}.rst`
 - If no argument: find the most recently modified `.rst` file in `artifacts/nova-spec-workflow/`
-- If no spec files exist: "No spec found. Run `/create-spec` first to generate a draft."
+- If no spec files exist: "No spec found. Run `/nova-create-spec` first to generate a draft."
 
 ### 2. Generate Blueprint URL
 
@@ -80,7 +80,7 @@ https://blueprints.launchpad.net/nova/+addspec
 
 | Condition | Behavior |
 |-----------|----------|
-| No spec found | Instruct contributor to run `/create-spec` first |
+| No spec found | Instruct contributor to run `/nova-create-spec` first |
 | Blueprint URL already present | Verify format, skip insertion, report status |
 | Invalid spec name (contains invalid characters) | Report error, suggest valid naming (lowercase, hyphens, no special chars) |
 

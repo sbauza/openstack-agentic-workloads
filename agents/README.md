@@ -14,7 +14,7 @@ Senior Nova core reviewer covering all aspects of Nova code review:
 - **Upgrade safety**: Rolling upgrade compatibility, RPC version pinning, online data migrations, config deprecation cycles
 - **Test quality**: Unit test expectations, functional reproducers for regressions (`nova/tests/functional/regressions/`), mock discipline
 
-**Used by**: `nova-review` (`/code-review`, `/spec-review`)
+**Used by**: `nova-review` (`/nova-code-review`, `/nova-spec-review`)
 
 ### [nova-coresec.md](nova-coresec.md) — Nova Core Security Reviewer
 
@@ -38,7 +38,7 @@ Experienced bug triage specialist:
 - **Launchpad lifecycle**: Status transitions, importance levels, Bug Supervisor permissions
 - **Source validation**: Always cross-references against the source checkout, never classifies from description alone
 
-**Used by**: `nova-bug-triage` (`/triage`)
+**Used by**: `nova-bug-triage` (`/nova-triage`)
 
 ### [backport-specialist.md](backport-specialist.md) — Backport Specialist
 

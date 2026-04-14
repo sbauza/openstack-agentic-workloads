@@ -1,5 +1,5 @@
 ---
-name: refine-spec
+name: nova-refine-spec
 description: Review and refine a generated nova-spec with structural completeness checks and architectural feedback. Use after create-spec to improve the draft with nova-core and security review.
 ---
 
@@ -25,7 +25,7 @@ The user will provide one of:
 
 - If a path is provided, read the file at that path
 - If no argument, find the most recently modified `.rst` file in `artifacts/nova-spec-workflow/`
-- If no spec files exist: "No spec found. Run `/create-spec` first to generate a draft."
+- If no spec files exist: "No spec found. Run `/nova-create-spec` first to generate a draft."
 
 ### 2. Structural Completeness Check
 
@@ -143,7 +143,7 @@ d. Repeat until:
   - Security review: [PASS / NOT NEEDED / CONCERNS NOTED]
 
   ### Next Steps
-  - Run `/blueprint` to add the Launchpad blueprint URL
+  - Run `/nova-blueprint` to add the Launchpad blueprint URL
   - Copy to your nova-specs repo for Gerrit submission
   ```
 
@@ -156,8 +156,8 @@ d. Repeat until:
 
 | Condition | Behavior |
 |-----------|----------|
-| No spec found | Instruct contributor to run `/create-spec` first |
-| Spec is not RST format | Report format error, suggest re-generating with `/create-spec` |
+| No spec found | Instruct contributor to run `/nova-create-spec` first |
+| Spec is not RST format | Report format error, suggest re-generating with `/nova-create-spec` |
 
 ### Writing Style
 

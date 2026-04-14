@@ -8,7 +8,7 @@ All nova-spec content produced by this workflow is a **draft for the contributor
 
 - Show the contributor what was generated and what sections need attention
 - Highlight TODO markers clearly so nothing is overlooked
-- Offer `/refine-spec` after every `/create-spec` invocation
+- Offer `/nova-refine-spec` after every `/nova-create-spec` invocation
 
 ## JIRA MCP Fallback
 

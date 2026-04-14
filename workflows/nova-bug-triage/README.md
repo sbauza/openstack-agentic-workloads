@@ -8,15 +8,15 @@ This workflow helps Nova bug triagers quickly classify bug reports against the N
 
 | Skill | Description |
 |-------|-------------|
-| `/triage` | Fetch a Launchpad bug, validate against Nova source, classify validity |
-| `/reproduce` | Deeper source analysis to assess reproducibility in master |
-| `/report` | Generate a persistent triage report artifact |
-| `/update-launchpad` | Post triage results to Launchpad with user approval |
+| `/nova-triage` | Fetch a Launchpad bug, validate against Nova source, classify validity |
+| `/nova-reproduce` | Deeper source analysis to assess reproducibility in master |
+| `/nova-report` | Generate a persistent triage report artifact |
+| `/nova-update-launchpad` | Post triage results to Launchpad with user approval |
 
 ## Prerequisites
 
 - **Nova source checkout** (auto-managed): The workflow automatically clones the Nova repository to `/workspace/repos/nova/` from `https://opendev.org/openstack/nova.git` if not already present. No manual setup needed.
-- **Launchpad OAuth credentials** (optional, for write operations): Set `LP_ACCESS_TOKEN` and `LP_ACCESS_SECRET` environment variables to enable posting comments and updating bug status via `/update-launchpad`. Without these, the workflow operates in read-only mode and generates fallback artifacts for manual posting. See **Generating Launchpad OAuth Tokens** below.
+- **Launchpad OAuth credentials** (optional, for write operations): Set `LP_ACCESS_TOKEN` and `LP_ACCESS_SECRET` environment variables to enable posting comments and updating bug status via `/nova-update-launchpad`. Without these, the workflow operates in read-only mode and generates fallback artifacts for manual posting. See **Generating Launchpad OAuth Tokens** below.
 
 ## Usage
 
@@ -38,24 +38,24 @@ cd openstack-agentic-workflows/workflows/nova-bug-triage
 claude
 ```
 
-Skills are available as slash commands: `/triage`, `/reproduce`, `/report`, `/update-launchpad`. Agent personas (`bug-triager`, `openstack-operator`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
+Skills are available as slash commands: `/nova-triage`, `/nova-reproduce`, `/nova-report`, `/nova-update-launchpad`. Agent personas (`bug-triager`, `openstack-operator`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
 
 ### Cursor
 
-Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/` with the `nova-bug-` prefix:
+Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/`:
 
 | Cursor Skill | Maps To |
 |--------------|---------|
-| `nova-bug-triage` | `/triage` |
-| `nova-bug-reproduce` | `/reproduce` |
-| `nova-bug-report` | `/report` |
-| `nova-bug-update-launchpad` | `/update-launchpad` |
+| `nova-triage` | `/nova-triage` |
+| `nova-reproduce` | `/nova-reproduce` |
+| `nova-report` | `/nova-report` |
+| `nova-update-launchpad` | `/nova-update-launchpad` |
 
 Type `/` in the agent chat to invoke a skill. Agent personas are auto-detected from `agents/`.
 
 ## Generating Launchpad OAuth Tokens
 
-To enable `/update-launchpad` (posting comments and changing bug status), you need OAuth 1.0a tokens. Run the included helper script:
+To enable `/nova-update-launchpad` (posting comments and changing bug status), you need OAuth 1.0a tokens. Run the included helper script:
 
 ```bash
 python3 workflows/shared/scripts/launchpad-auth.py
@@ -81,7 +81,7 @@ These tokens are permanent and do not expire unless you revoke them at `https://
 
 ## What It Does
 
-### /triage
+### /nova-triage
 
 1. Parses bug ID from user input (bare ID or Launchpad URL)
 2. Ensures Nova source checkout is available (auto-clones if missing)
@@ -92,7 +92,7 @@ These tokens are permanent and do not expire unless you revoke them at `https://
 7. Classifies into one of six validity categories with supporting rationale
 8. Presents classification for user review
 
-### /reproduce
+### /nova-reproduce
 
 1. Loads previously triaged bug context
 2. Identifies relevant code paths in the Nova checkout
@@ -100,13 +100,13 @@ These tokens are permanent and do not expire unless you revoke them at `https://
 4. Checks git log for recent changes and fixes
 5. Produces reproducibility assessment (Yes / No / Inconclusive / Requires Environment)
 
-### /report
+### /nova-report
 
 1. Loads all analysis from the current session (triage, reproduction, duplicates)
 2. Generates a structured markdown report
 3. Saves to `artifacts/nova-bug-triage/triage-{bug_id}.md`
 
-### /update-launchpad
+### /nova-update-launchpad
 
 1. Maps validity category to Launchpad status/importance changes
 2. Drafts a constructive comment for the bug reporter
@@ -147,13 +147,13 @@ workflows/nova-bug-triage/
 │   └── ambient.json
 ├── .claude/
 │   └── skills/
-│       ├── triage/
+│       ├── nova-triage/
 │       │   └── SKILL.md
-│       ├── reproduce/
+│       ├── nova-reproduce/
 │       │   └── SKILL.md
-│       ├── report/
+│       ├── nova-report/
 │       │   └── SKILL.md
-│       └── update-launchpad/
+│       └── nova-update-launchpad/
 │           └── SKILL.md
 ├── AGENTS.md
 ├── CLAUDE.md

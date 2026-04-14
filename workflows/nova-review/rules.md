@@ -17,7 +17,7 @@ The Nova Review workflow supports both **Gerrit MCP** and **REST API fallback** 
 
 If Gerrit MCP is not available or connection fails:
 
-1. **Review Posting** (`/gerrit-comment` skill):
+1. **Review Posting** (`/nova-gerrit-comment` skill):
    - Automatically falls back to Gerrit REST API
    - Prompts user for HTTP credentials (username and password)
    - Posts review using `POST /changes/{id}/revisions/current/review`
@@ -25,7 +25,7 @@ If Gerrit MCP is not available or connection fails:
    - On authentication failure (HTTP 401/403), user can retry with different credentials or generate manual artifact
    - Maximum 3 authentication attempts, then falls back to manual artifact generation
 
-2. **Review History** (`/spec-review` and `/code-review` skills):
+2. **Review History** (`/nova-spec-review` and `/nova-code-review` skills):
    - Gerrit review history check is skipped
    - Agent notes in review output that history was not checked
    - Suggests manual inspection at `https://review.opendev.org/c/<change-id>`

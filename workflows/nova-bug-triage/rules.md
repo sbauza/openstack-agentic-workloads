@@ -19,16 +19,16 @@ When presenting triage results, lay out the proposed classification and Launchpa
 
 The Nova Bug Triage workflow interacts with Launchpad exclusively via its REST API:
 
-1. **Bug Fetching** (`/triage` skill):
+1. **Bug Fetching** (`/nova-triage` skill):
    - Uses `workflows/shared/scripts/launchpad-fetch-bug.sh` to fetch bug details
    - No authentication needed for public bugs
    - Private bugs will return HTTP 401 — inform the user
 
-2. **Duplicate Search** (`/triage` skill):
+2. **Duplicate Search** (`/nova-triage` skill):
    - Uses `curl` against the Launchpad REST API search endpoint
    - No authentication needed
 
-3. **Posting Updates** (`/update-launchpad` skill):
+3. **Posting Updates** (`/nova-update-launchpad` skill):
    - Uses `workflows/shared/scripts/launchpad-update-bug.py` with OAuth 1.0a
    - Requires environment variables: `LP_ACCESS_TOKEN`, `LP_ACCESS_SECRET`, and optionally `LP_CONSUMER_KEY`
    - If credentials are not configured, the skill generates a fallback artifact at `artifacts/nova-bug-triage/update-{bug_id}.md` with copy-paste instructions for manual posting

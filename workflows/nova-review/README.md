@@ -6,9 +6,9 @@ An ACP workflow for reviewing OpenStack Nova code and specifications.
 
 | Skill | Description |
 |-------|-------------|
-| `/spec-review` | Review nova-specs proposals for completeness, technical soundness, and alignment with Nova architecture |
-| `/code-review` | Review Nova code changes against coding conventions (N-codes), versioning rules, and testing requirements |
-| `/gerrit-comment` | Post a review as inline and top-level comments on a Gerrit change (uses Gerrit MCP if available, otherwise REST API with HTTP auth) |
+| `/nova-spec-review` | Review nova-specs proposals for completeness, technical soundness, and alignment with Nova architecture |
+| `/nova-code-review` | Review Nova code changes against coding conventions (N-codes), versioning rules, and testing requirements |
+| `/nova-gerrit-comment` | Post a review as inline and top-level comments on a Gerrit change (uses Gerrit MCP if available, otherwise REST API with HTTP auth) |
 
 ## Usage
 
@@ -45,17 +45,17 @@ cd openstack-agentic-workflows/workflows/nova-review
 claude
 ```
 
-Skills are available as slash commands: `/spec-review`, `/code-review`, `/gerrit-comment`. Agent personas (`nova-core`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
+Skills are available as slash commands: `/nova-spec-review`, `/nova-code-review`, `/nova-gerrit-comment`. Agent personas (`nova-core`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
 
 ### Cursor
 
-Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/` with the `review-` prefix:
+Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/`:
 
 | Cursor Skill | Maps To |
 |--------------|---------|
-| `review-spec-review` | `/spec-review` |
-| `review-code-review` | `/code-review` |
-| `review-gerrit-comment` | `/gerrit-comment` |
+| `nova-code-review` | `/nova-code-review` |
+| `nova-spec-review` | `/nova-spec-review` |
+| `nova-gerrit-comment` | `/nova-gerrit-comment` |
 
 Type `/` in the agent chat to invoke a skill. Agent personas are auto-detected from `agents/`.
 
@@ -109,11 +109,11 @@ workflows/nova-review/
 │   └── ambient.json       # Workflow configuration
 ├── .claude/
 │   └── skills/
-│       ├── spec-review/
+│       ├── nova-spec-review/
 │       │   └── SKILL.md   # Spec review skill
-│       ├── code-review/
+│       ├── nova-code-review/
 │       │   └── SKILL.md   # Code review skill
-│       └── gerrit-comment/
+│       └── nova-gerrit-comment/
 │           └── SKILL.md   # Post review to Gerrit
 ├── CLAUDE.md              # Nova project reference (conventions, architecture)
 ├── rules.md               # Behavioral rules (self-review, etc.)

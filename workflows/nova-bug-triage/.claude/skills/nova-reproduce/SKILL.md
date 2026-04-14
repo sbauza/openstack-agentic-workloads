@@ -1,5 +1,5 @@
 ---
-name: reproduce
+name: nova-reproduce
 description: Analyze a triaged bug against the Nova source checkout to assess reproducibility. Use after triage to perform deeper source analysis and verify if the bug exists in current master.
 ---
 
@@ -12,8 +12,8 @@ Perform a deeper source-based analysis of a triaged bug to determine whether the
 Optional bug ID. If omitted, uses the previously triaged bug from the current session.
 
 Examples:
-- `/reproduce` (uses last triaged bug)
-- `/reproduce 2112373`
+- `/nova-reproduce` (uses last triaged bug)
+- `/nova-reproduce 2112373`
 
 ## Process
 
@@ -21,8 +21,8 @@ Examples:
 
 1. Check if a bug was previously triaged in this session
 2. If yes and no bug ID provided: use the previously triaged bug's details and classification
-3. If bug ID provided: fetch bug details (same as `/triage` Step 3) and load any existing triage classification
-4. If no prior triage and no bug ID: error with "No bug context available. Run `/triage {bug_id}` first, or provide a bug ID: `/reproduce {bug_id}`"
+3. If bug ID provided: fetch bug details (same as `/nova-triage` Step 3) and load any existing triage classification
+4. If no prior triage and no bug ID: error with "No bug context available. Run `/nova-triage {bug_id}` first, or provide a bug ID: `/nova-reproduce {bug_id}`"
 
 ### Step 2. Ensure Nova Source Checkout
 
@@ -111,14 +111,14 @@ Based on the analysis, produce one of these assessments:
 **Limitations**: {what could not be determined from source analysis alone}
 
 Offer next steps:
-- `/report` — include reproduction findings in the triage report
-- `/update-launchpad` — post findings to Launchpad
+- `/nova-report` — include reproduction findings in the triage report
+- `/nova-update-launchpad` — post findings to Launchpad
 
 ## Output
 
-The reproducibility assessment is held in session memory for use by `/report`.
+The reproducibility assessment is held in session memory for use by `/nova-report`.
 
-No artifact is written by this skill — use `/report` to generate a persistent artifact.
+No artifact is written by this skill — use `/nova-report` to generate a persistent artifact.
 
 ### Writing Style
 

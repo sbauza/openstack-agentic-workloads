@@ -251,27 +251,27 @@ Follow the rules in `rules.md`.
 
 ### Cursor Skill Symlinks
 
-Every skill in `.claude/skills/` must also be symlinked from the root `.agents/skills/` directory so Cursor can discover it. Use a **workflow prefix** to avoid name collisions (multiple workflows may have skills with the same name, e.g., `triage`).
+Every skill in `.claude/skills/` must also be symlinked from the root `.agents/skills/` directory so Cursor can discover it.
 
-**Naming convention**: `{prefix}-{skill-name}` where the prefix is a short identifier for the workflow:
+**Naming convention**: The symlink name should match the skill directory name. If the skill name is already globally unique (e.g., `nova-code-review`), use it directly. For workflows where skill names could collide with other workflows, add a short workflow prefix (e.g., `gtg-backport`, `jira-triage`).
 
-| Workflow | Prefix |
-|----------|--------|
-| gerrit-to-gitlab | `gtg` |
-| jira-issue-triage | `jira` |
-| nova-bug-triage | `nova-bug` |
-| nova-review | `review` |
-| nova-spec-workflow | `spec` |
+| Workflow | Symlink convention | Example |
+|----------|-------------------|---------|
+| gerrit-to-gitlab | `gtg-{skill}` | `gtg-backport` |
+| jira-issue-triage | `jira-{skill}` | `jira-triage` |
+| nova-bug-triage | same as skill name | `nova-triage` |
+| nova-review | same as skill name | `nova-code-review` |
+| nova-spec-workflow | same as skill name | `nova-create-spec` |
 
-**Example** — adding a skill `my-skill` to the `nova-review` workflow:
+**Example** — adding a skill `nova-my-skill` to the `nova-review` workflow:
 
 ```bash
 # 1. Create the skill (Claude Code / ACP path)
-mkdir -p workflows/nova-review/.claude/skills/my-skill
+mkdir -p workflows/nova-review/.claude/skills/nova-my-skill
 # ... write SKILL.md ...
 
-# 2. Symlink for Cursor discovery
-ln -s ../../workflows/nova-review/.claude/skills/my-skill .agents/skills/review-my-skill
+# 2. Symlink for Cursor discovery (same name as the skill directory)
+ln -s ../../workflows/nova-review/.claude/skills/nova-my-skill .agents/skills/nova-my-skill
 ```
 
 The symlink path is always `../../workflows/{workflow}/.claude/skills/{skill}` relative to `.agents/skills/`.
@@ -358,7 +358,7 @@ Use the "Custom Workflow" feature to test without merging to main:
 "systemPrompt": "You help with OpenStack development"
 
 // ✅ Specific and actionable
-"systemPrompt": "You are a Nova community member...\n\n## Skills\n- /code-review\n..."
+"systemPrompt": "You are a Nova community member...\n\n## Skills\n- /nova-code-review\n..."
 ```
 
 ### Duplicating Deterministic Checks

@@ -6,9 +6,9 @@ Generate well-structured nova-spec proposals from JIRA RFE tickets or free-form 
 
 | Skill | Description |
 |-------|-------------|
-| `/create-spec` | Generate a nova-spec from a JIRA RFE or feature description |
-| `/refine-spec` | Review and refine a generated spec with architectural feedback |
-| `/blueprint` | Add Launchpad blueprint URL to a spec |
+| `/nova-create-spec` | Generate a nova-spec from a JIRA RFE or feature description |
+| `/nova-refine-spec` | Review and refine a generated spec with architectural feedback |
+| `/nova-blueprint` | Add Launchpad blueprint URL to a spec |
 
 ## Prerequisites
 
@@ -36,24 +36,24 @@ cd openstack-agentic-workflows/workflows/nova-spec-workflow
 claude
 ```
 
-Skills are available as slash commands: `/create-spec`, `/refine-spec`, `/blueprint`. Agent personas (`nova-core`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
+Skills are available as slash commands: `/nova-create-spec`, `/nova-refine-spec`, `/nova-blueprint`. Agent personas (`nova-core`, `nova-coresec`) are loaded automatically via `CLAUDE.md`.
 
 ### Cursor
 
-Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/` with the `spec-` prefix:
+Open the repository root in Cursor. Skills are discovered via symlinks in `.agents/skills/`:
 
 | Cursor Skill | Maps To |
 |--------------|---------|
-| `spec-create-spec` | `/create-spec` |
-| `spec-refine-spec` | `/refine-spec` |
-| `spec-blueprint` | `/blueprint` |
+| `nova-create-spec` | `/nova-create-spec` |
+| `nova-refine-spec` | `/nova-refine-spec` |
+| `nova-blueprint` | `/nova-blueprint` |
 
 Type `/` in the agent chat to invoke a skill. Agent personas are auto-detected from `agents/`.
 
 ### Create a Spec from a JIRA RFE
 
 ```text
-/create-spec NOVA-1234
+/nova-create-spec NOVA-1234
 ```
 
 The workflow reads the JIRA ticket, asks you 3 clarification questions about the problem, use cases, and approach, then generates a complete nova-spec RST file.
@@ -61,13 +61,13 @@ The workflow reads the JIRA ticket, asks you 3 clarification questions about the
 ### Create a Spec from a Description
 
 ```text
-/create-spec Add support for live migration of instances with vGPUs
+/nova-create-spec Add support for live migration of instances with vGPUs
 ```
 
 ### Refine a Generated Spec
 
 ```text
-/refine-spec
+/nova-refine-spec
 ```
 
 Checks structural completeness, invokes `nova-core` and `nova-coresec` agents for architectural review, and helps strengthen weak sections interactively.
@@ -75,7 +75,7 @@ Checks structural completeness, invokes `nova-core` and `nova-coresec` agents fo
 ### Add Blueprint URL
 
 ```text
-/blueprint vgpu-live-migration
+/nova-blueprint vgpu-live-migration
 ```
 
 ## Output

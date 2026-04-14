@@ -1,5 +1,5 @@
 ---
-name: create-spec
+name: nova-create-spec
 description: Generate a nova-spec proposal from a JIRA RFE ticket or free-form feature description. Use when a contributor wants to write a new nova-spec from an RFE or feature idea.
 ---
 
@@ -42,7 +42,7 @@ c. **If JIRA MCP is unavailable**:
 
 d. **Error handling**:
    - If the JIRA key is not found: "Could not find JIRA ticket {key}. You can paste the ticket content manually, or provide a free-form feature description instead."
-   - If the ticket spans multiple distinct features: Flag the multi-feature scope and suggest: "This RFE appears to cover multiple distinct features. Consider running /create-spec separately for each feature."
+   - If the ticket spans multiple distinct features: Flag the multi-feature scope and suggest: "This RFE appears to cover multiple distinct features. Consider running /nova-create-spec separately for each feature."
 
 ### 3. Locate Nova-Specs Template
 
@@ -175,8 +175,8 @@ c. Present a summary to the contributor:
 
    ### Next Steps
 
-   - Run `/refine-spec` for structural and architectural review
-   - Run `/blueprint` to add the Launchpad blueprint URL
+   - Run `/nova-refine-spec` for structural and architectural review
+   - Run `/nova-blueprint` to add the Launchpad blueprint URL
    - Copy the file to your nova-specs repo when ready for Gerrit submission
    ```
 
@@ -185,7 +185,7 @@ c. Present a summary to the contributor:
 Write the generated spec to `artifacts/nova-spec-workflow/{spec-name}.rst`.
 
 The RST file must:
-- Start with the Launchpad blueprint URL placeholder (to be filled by `/blueprint`)
+- Start with the Launchpad blueprint URL placeholder (to be filled by `/nova-blueprint`)
 - Contain all 17 required sections in the correct order
 - Use RST section headers with underline characters (`=` for title, `-` for sections)
 - Include `.. TODO::` markers for sections that could not be populated

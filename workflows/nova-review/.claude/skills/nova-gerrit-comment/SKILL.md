@@ -1,5 +1,5 @@
 ---
-name: gerrit-comment
+name: nova-gerrit-comment
 description: Post a review as comments on a Gerrit change using the Gerrit MCP server or REST API fallback. Use after completing a code-review or spec-review to publish findings to Gerrit.
 ---
 
@@ -9,7 +9,7 @@ Post review findings as inline and top-level comments on an OpenStack Gerrit cha
 
 ## Prerequisites
 
-- A completed review artifact from `/spec-review` or `/code-review` must exist
+- A completed review artifact from `/nova-spec-review` or `/nova-code-review` must exist
 - The user must provide or confirm the Gerrit change number
 
 ## Input
@@ -18,9 +18,9 @@ The user will provide one of:
 
 - A Gerrit change number (e.g., `123456`)
 - A Gerrit change URL (e.g., `https://review.opendev.org/c/openstack/nova/+/123456`)
-- Just confirmation to post after a `/spec-review` or `/code-review` run
+- Just confirmation to post after a `/nova-spec-review` or `/nova-code-review` run
 
-If no review artifact exists yet, tell the user to run `/spec-review` or `/code-review` first.
+If no review artifact exists yet, tell the user to run `/nova-spec-review` or `/nova-code-review` first.
 
 ## Process
 
@@ -214,7 +214,7 @@ Inform the user that the review was saved to an artifact file for manual posting
 
 | Condition | Behavior |
 |-----------|----------|
-| No review artifact found | Tell user to run `/spec-review` or `/code-review` first |
+| No review artifact found | Tell user to run `/nova-spec-review` or `/nova-code-review` first |
 | MCP unavailable, REST API succeeds | Post via REST API, report success |
 | MCP unavailable, REST API auth fails | Retry up to 3 times, then generate manual artifact |
 | MCP unavailable, REST API network error | Generate manual artifact with error details |

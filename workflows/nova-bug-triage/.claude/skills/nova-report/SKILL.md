@@ -1,5 +1,5 @@
 ---
-name: report
+name: nova-report
 description: Generate a persistent triage report artifact from the current session analysis. Use after triage to save findings as a structured markdown report.
 ---
 
@@ -12,15 +12,15 @@ Create a structured markdown report consolidating all triage analysis performed 
 Optional bug ID. If omitted, uses the previously triaged bug from the current session.
 
 Examples:
-- `/report` (uses last triaged bug)
-- `/report 2112373`
+- `/nova-report` (uses last triaged bug)
+- `/nova-report 2112373`
 
 ## Process
 
 ### Step 1. Load Context
 
-1. Load triage classification from the current session (required — error if no prior `/triage` was run)
-2. Load reproducibility assessment if `/reproduce` was run (optional — section marked "Not yet performed" if absent)
+1. Load triage classification from the current session (required — error if no prior `/nova-triage` was run)
+2. Load reproducibility assessment if `/nova-reproduce` was run (optional — section marked "Not yet performed" if absent)
 3. Load duplicate candidates if identified during triage (optional)
 
 ### Step 2. Generate Report
@@ -64,8 +64,8 @@ Create a structured markdown report with the following sections:
 
 ## Reproducibility Findings
 
-{If /reproduce was run: full assessment}
-{If not run: "Reproducibility analysis not yet performed. Run `/reproduce` for deeper source analysis."}
+{If /nova-reproduce was run: full assessment}
+{If not run: "Reproducibility analysis not yet performed. Run `/nova-reproduce` for deeper source analysis."}
 
 ## Duplicate Analysis
 
@@ -89,7 +89,7 @@ Create a structured markdown report with the following sections:
 
 ## Proposed Launchpad Comment
 
-{Draft comment text formatted for posting to Launchpad. This is used by /update-launchpad.}
+{Draft comment text formatted for posting to Launchpad. This is used by /nova-update-launchpad.}
 ```
 
 ### Step 3. Write Artifact
@@ -105,7 +105,7 @@ Report the file path to the user:
 > Triage report saved to `artifacts/nova-bug-triage/triage-{bug_id}.md`
 
 Offer next steps:
-- `/update-launchpad` — post the triage findings to Launchpad
+- `/nova-update-launchpad` — post the triage findings to Launchpad
 
 ## Output
 

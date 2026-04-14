@@ -1,5 +1,5 @@
 ---
-name: triage
+name: nova-triage
 description: Fetch a Nova Launchpad bug, validate against source code, and classify its validity. Use when triaging a Launchpad bug report to determine if it is a genuine defect, configuration issue, or feature request.
 ---
 
@@ -18,8 +18,8 @@ Fetch bug details from Launchpad, display a structured summary, analyze the repo
 A Launchpad bug ID (integer) or full URL.
 
 Examples:
-- `/triage 2112373`
-- `/triage https://bugs.launchpad.net/nova/+bug/2112373`
+- `/nova-triage 2112373`
+- `/nova-triage https://bugs.launchpad.net/nova/+bug/2112373`
 
 ## Process
 
@@ -153,15 +153,15 @@ If RFE: also note **Recommendation**: "Consider filing a nova-spec or RFE for th
 Present the classification for the triager's review. Do not proceed to any external action.
 
 Offer next steps:
-- `/reproduce` — deeper source analysis to verify reproducibility
-- `/report` — generate a persistent triage report artifact
-- `/update-launchpad` — post the triage findings to Launchpad
+- `/nova-reproduce` — deeper source analysis to verify reproducibility
+- `/nova-report` — generate a persistent triage report artifact
+- `/nova-update-launchpad` — post the triage findings to Launchpad
 
 ## Output
 
-The triage classification is held in session memory for use by `/reproduce`, `/report`, and `/update-launchpad`.
+The triage classification is held in session memory for use by `/nova-reproduce`, `/nova-report`, and `/nova-update-launchpad`.
 
-No artifact is written by this skill — use `/report` to generate a persistent artifact.
+No artifact is written by this skill — use `/nova-report` to generate a persistent artifact.
 
 ### Writing Style
 

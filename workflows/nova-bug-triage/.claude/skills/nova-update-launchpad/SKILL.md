@@ -1,5 +1,5 @@
 ---
-name: update-launchpad
+name: nova-update-launchpad
 description: Draft and post triage results to a Launchpad bug with user approval. Use after triage to update the bug status, importance, and add a comment on Launchpad.
 ---
 
@@ -12,15 +12,15 @@ Draft a Launchpad comment and status/importance changes based on the triage resu
 Optional bug ID. If omitted, uses the previously triaged bug from the current session.
 
 Examples:
-- `/update-launchpad` (uses last triaged bug)
-- `/update-launchpad 2112373`
+- `/nova-update-launchpad` (uses last triaged bug)
+- `/nova-update-launchpad 2112373`
 
 ## Process
 
 ### Step 1. Load Context
 
-1. Load triage classification from the current session (required — error if no prior `/triage` was run)
-2. Load triage report artifact if available (from `/report`)
+1. Load triage classification from the current session (required — error if no prior `/nova-triage` was run)
+2. Load triage report artifact if available (from `/nova-report`)
 3. If a report artifact exists, use its Proposed Launchpad Comment section as the starting draft
 
 ### Step 2. Map to Launchpad Fields
