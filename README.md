@@ -127,7 +127,7 @@ Clone or open this repository as a project in Cursor. Everything is auto-discove
 
 - **Skills** from `.agents/skills/` — all 17 workflow skills are available via symlinks (e.g., `gtg-backport`, `jira-triage`, `nova-code-review`). Type `/` in the agent chat to invoke a skill directly.
 - **Rules** from `.cursor/rules/` — the global behavioral rules (`rules.md`) are loaded via an `.mdc` rule file with `alwaysApply: true`
-- **Agent personas** from `agents/` — the shared persona files (e.g., `nova-core.md`, `bug-triager.md`) are auto-detected
+- **Agent personas** from `.cursor/agents/` — symlinks to the shared persona files in `agents/` (e.g., `nova-core.md`, `bug-triager.md`)
 - **Project context** from `AGENTS.md` — read automatically at startup, including nested `AGENTS.md` files in each workflow directory
 
 No plugin or additional configuration is needed. Open the repository in Cursor and all skills, rules, and personas are available immediately.
@@ -181,7 +181,7 @@ ACP reads `.ambient/ambient.json` for the workflow configuration (`systemPrompt`
 |-----------|-------------------|--------|-------------|-----|
 | Skills | `workflows/{name}/.claude/skills/*/SKILL.md` | `.agents/skills/` symlinks | `.claude/skills/` directly | via `systemPrompt` |
 | Rules | `rules.md` | `.cursor/rules/*.mdc` | `CLAUDE.md` → `@rules.md` | `systemPrompt` embeds rules |
-| Personas | `agents/*.md` | auto-detected | `@../../agents/*.md` refs | `systemPrompt` references |
+| Personas | `agents/*.md` | `.cursor/agents/` symlinks | `@../../agents/*.md` refs | `systemPrompt` references |
 | Knowledge | `knowledge/*.md` | auto-detected | `@../../knowledge/*.md` refs | `systemPrompt` references |
 | Project context | `AGENTS.md` | auto-detected | `CLAUDE.md` → `@AGENTS.md` | `systemPrompt` embeds |
 
@@ -456,6 +456,10 @@ See [`agents/README.md`](agents/README.md) for details on how personas work, whe
     ├── nova-create-spec/      # → workflows/nova-spec-workflow/.claude/skills/nova-create-spec
     └── ...                    # (17 symlinks total)
 .cursor/
+├── agents/                    # Cursor agent discovery (symlinks to agents/)
+│   ├── nova-core.md           # → agents/nova-core.md
+│   ├── bug-triager.md         # → agents/bug-triager.md
+│   └── ...                    # (5 symlinks total)
 └── rules/
     └── openstack-rules.mdc   # Cursor rule file (references rules.md)
 agents/

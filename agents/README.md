@@ -99,8 +99,9 @@ Personas are typically invoked conditionally based on what the change touches:
    - **Review/Triage Priorities** — severity tiers for findings
    - **Signature Phrases** — characteristic language (helps maintain persona consistency)
 4. Reference the persona from workflow skills using `@../../agents/{name}.md`
-5. Add the persona to the table in the top-level `AGENTS.md`
-6. Update this README
+5. Add a symlink for Cursor discovery: `ln -s ../../agents/{name}.md .cursor/agents/{name}.md`
+6. Add the persona to the table in the top-level `AGENTS.md`
+7. Update this README
 
 ### Naming Convention
 

@@ -12,6 +12,7 @@ This repository contains custom ACP (Ambient Code Platform) workflow definitions
 ├── .agents/
 │   └── skills/             # Cursor skill discovery (symlinks to .claude/skills/)
 ├── .cursor/
+│   ├── agents/             # Cursor agent discovery (symlinks to agents/)
 │   └── rules/              # Cursor rule files (.mdc format)
 ├── agents/                 # Shared agent personas (reusable across workflows)
 │   ├── nova-core.md
@@ -113,7 +114,8 @@ When adding a persona:
 2. Include YAML frontmatter with `name`, `description`, and `tools`
 3. Define personality, communication style, domain knowledge, and key behaviors
 4. Reference the persona from workflow skills using `@../../agents/{persona-name}.md`
-5. Document the persona in this table
+5. Add a symlink for Cursor discovery: `ln -s ../../agents/{persona-name}.md .cursor/agents/{persona-name}.md`
+6. Document the persona in this table
 
 ### Guidelines
 
@@ -406,7 +408,9 @@ Present the review. Ask the user what vote they want to apply.
 |------|-------|---------------|
 | Workflow config | `workflows/{name}/.ambient/ambient.json` | ACP |
 | Skills (source) | `workflows/{name}/.claude/skills/{skill}/SKILL.md` | Claude Code, ACP |
-| Skills (symlinks) | `.agents/skills/{prefix}-{skill}/` | Cursor |
+| Skills (symlinks) | `.agents/skills/{skill}/` | Cursor |
+| Personas (source) | `agents/*.md` | Claude Code, ACP |
+| Personas (symlinks) | `.cursor/agents/*.md` | Cursor |
 | Commands | `workflows/{name}/.claude/commands/*.md` | Claude Code, ACP |
 | Project reference | `AGENTS.md` (root and per-workflow) | All tools |
 | Behavioral rules | `rules.md` / `.cursor/rules/*.mdc` | Claude Code, ACP / Cursor |
