@@ -1,0 +1,1 @@
+../../agents/nova-core.md
