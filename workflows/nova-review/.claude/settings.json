@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(artifacts/**)",
+      "Bash(workflows/shared/scripts/*)"
+    ],
+    "deny": [
+      "Bash"
+    ]
+  }
+}

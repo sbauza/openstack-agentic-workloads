@@ -27,6 +27,22 @@ Before presenting any output to the user:
 
 If you found and fixed issues, briefly note: "Self-review: Fixed [issue]"
 
+## Filesystem Boundaries
+
+Workflows operate within a restricted set of directories. Agents must **never** read or write files outside these paths:
+
+- `/workspace/repos/` — source code repositories added to the session
+- The workflow's own directory tree (skills, rules, artifacts)
+- `/tmp/` — temporary files only
+
+Specifically, agents must **not**:
+
+- Access the user's home directory, SSH keys, credentials, or dotfiles
+- Read or modify system files outside `/workspace/`
+- Execute commands that write outside the allowed paths
+
+If a workflow needs shell access (e.g., `git` operations for backporting), the main workflow agent may use `Bash` — but only for commands scoped to `/workspace/repos/` and the workflow's artifact directory. **Subagent personas must never have `Bash` access** — they are read-only analysts.
+
 ## Human-Readable Comments
 
 All review comments — whether in artifacts, Gerrit, or conversation — must be written for human consumption:

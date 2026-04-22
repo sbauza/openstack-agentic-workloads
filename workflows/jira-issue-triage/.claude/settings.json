@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(artifacts/**)",
+      "Bash(git clone *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(workflows/shared/scripts/*)"
+    ],
+    "deny": [
+      "Bash"
+    ]
+  }
+}

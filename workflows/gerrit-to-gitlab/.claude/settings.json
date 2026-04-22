@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(artifacts/**)",
+      "Bash(git *)",
+      "Bash(glab *)",
+      "Bash(docker *)",
+      "Bash(workflows/shared/scripts/*)",
+      "Bash(cd /workspace/repos/*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(sudo *)",
+      "Bash(chmod *)",
+      "Bash(chown *)"
+    ]
+  }
+}
