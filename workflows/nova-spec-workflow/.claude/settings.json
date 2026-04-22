@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Write(artifacts/**)"
+    ],
+    "deny": [
+      "Bash"
+    ]
+  }
+}
